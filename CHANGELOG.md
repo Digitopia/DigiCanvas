@@ -1,4 +1,11 @@
-# v0.1 2023-06-23
+# v0.2b (2023-09-05)
+- TODO
+
+# v0.2a (2023-07-21)
+
+- [✔️] multi samples
+
+# v0.1 (2023-06-23)
 
 Abrir uma página em branco, com dois elementos:
 

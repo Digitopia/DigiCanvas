@@ -1,0 +1,33 @@
+- [✔] varios samples
+  - [✔] UI
+  - [✔] audio
+- [✔] bug fixing
+	- [✔] botao do meio -> é toggle de modo play/granular
+	- [✔] janela i é contextual de parametros do modo ativo
+- [~] granular
+	- [ ] em modo granular aparece playhead
+	- [~] params
+		- [~] source point
+		- [~] spray (distance from source point, linearly random)
+		- [~] grain size (min 50ms, max 1500ms)
+		- [~] rate (a quanto tempo surge um novo, 100ms -> 2000ms)
+	- [ ] visualizacao
+		- [ ] circulozinhos
+		- [~] aparecem no contexto do i, como sliders verticais
+- [ ] scaling button
+	- [ ] sample volume (if dragging in Y)
+		- [ ] waveform gets redraw automatically
+- [~] minor/extra
+	- [✔] keys 1 2 3 4 para carregar presets logo
+	- [~] botão de + em canto inferior direito para upload novos sons
+	- [ ] adicionar ícones
+  	- [ ] timestrecth (if in X)
+  		- [ ] later
+---
+
+outras features para v0.3
+
+- filtro em sample
+- efeito delay
+- gravar sons
+- ...

@@ -13,7 +13,7 @@
     "nexusui": "^2.1.6",
     "tone": "^13.8.34",
     "vue": "^2.6.14",
-    "wavesurfer.js": "^6.6.4"
+    "wavesurfer.js": "^7.2.1"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",
