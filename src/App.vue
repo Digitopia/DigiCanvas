@@ -43,7 +43,7 @@ export default {
   },
 
   mounted() {
-    this.samples.push(this.presets[1]) // 1-based as referring to keyboard key
+    this.samples.push(this.presets[1]) // 1-based as it's a dict with key referring to keyboard key
     // this.samples = this.preset
 
     // unselect controls

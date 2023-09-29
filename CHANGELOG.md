@@ -1,9 +1,11 @@
+# v0.2c (2023-09-29)
+- [ ] granular audio
+
 # v0.2b (2023-09-05)
-- TODO
+- [✔️] multi samples audio
 
 # v0.2a (2023-07-21)
-
-- [✔️] multi samples
+- [✔️] multi samples UI
 
 # v0.1 (2023-06-23)
 
