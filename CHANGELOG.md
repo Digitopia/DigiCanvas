@@ -1,8 +1,27 @@
+# v0.3 (2023-10-20)
+- [✓] fixes in granular audio
+  - [✓] spray em função do tamanho do buffer (0 a 100% do buffer)
+  - [✓] source point middle for now
+  - [✓] linearRamptoTime 5ms/10ms for each grain
+  - [✓] remove bug circle left over
+  - [✓] remove UI of grain using its duration
+  - [✓] -6 volume value player e grain
+  - [✓] inverter param rate
+  - [✓] store granular spread between mode toggles
+  - [✓] drag spray region, no spray and source point always center of region
+- [✓] scale button
+  - [✓] timestretch on x
+  - [✓] amplitude on y
+- bug fixing
+  - [✓] bug: params multiple samples
+  - [✓] bug: not showing progress color in sample mode, after toggling back from granular mode
+  - [✓] bug: not playing from beginning in sample mode, after toggling back from granular mode
+
 # v0.2c (2023-09-29)
-- [ ] granular audio
+- [✔️] granular audio
 
 # v0.2b (2023-09-05)
-- [✔️] multi samples audio
+- [✔️] multi samples with audio
 
 # v0.2a (2023-07-21)
 - [✔️] multi samples UI
