@@ -177,10 +177,13 @@ export default {
         this.effectSendGainValue
       )
       // this.effectSendNode.gain.value = this.effectSendGainValue
-      this.effectSendNode.gain.exponentialRampToValueAtTime(
-        this.effectSendGainValue,
-        0.02
-      )
+
+      if (this.effectSendGainValue > 0) {
+        this.effectSendNode.gain.exponentialRampToValueAtTime(
+          this.effectSendGainValue,
+          0.02
+        )
+      }
     },
 
     mode() {
@@ -483,7 +486,6 @@ export default {
 
     updateRateInterval() {
       clearInterval(this.settings.granular.params.rate.interval)
-      this.addGrain()
       this.settings.granular.params.rate.interval = setInterval(() => {
         this.addGrain()
       }, this.invertedRate * 1000)
@@ -526,6 +528,7 @@ export default {
       })
 
       this.updateRateInterval()
+      this.addGrain()
     },
 
     addGrain() {
@@ -551,7 +554,7 @@ export default {
 
       const region = this.regions.regions[0]
       const space = (region.end - region.start) / 2
-      console.log({ space })
+      // console.log({ space })
       const mappedStdDev = mapNumber(
         this.settings.granular.params.random.value,
         0,
@@ -561,7 +564,7 @@ export default {
       )
       const randOffset = randomGaussian(0, mappedStdDev)
 
-      console.log(randOffset)
+      // console.log(randOffset)
 
       const grainOffset = clamp(
         baseOffset + randOffset,
@@ -626,7 +629,7 @@ export default {
         0,
         this.width
       )
-      console.log({ x })
+      // console.log({ x })
       this.settings.granular.grains.push({ x })
       this.drawGrains()
 

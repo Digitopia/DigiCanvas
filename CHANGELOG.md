@@ -1,4 +1,5 @@
-# v0.3 (2023-10-20)
+# v0.3 (2023-10-19)
+- [✓] add new sounds
 - [✓] fixes in granular audio
   - [✓] spray em função do tamanho do buffer (0 a 100% do buffer)
   - [✓] source point middle for now
