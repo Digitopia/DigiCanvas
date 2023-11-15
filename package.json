@@ -13,6 +13,7 @@
     "nexusui": "^2.1.6",
     "tone": "^13.8.34",
     "vue": "^2.6.14",
+    "vue-round-slider": "^1.0.1",
     "wavesurfer.js": "^7.2.1"
   },
   "devDependencies": {

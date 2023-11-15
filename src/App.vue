@@ -1,6 +1,6 @@
 <template>
   <div id="app" class="no-select">
-    <div id="add-button" @click="addSound">➕</div>
+    <div id="add-button" @click="addSound"></div>
     <Sample
       v-for="(sample, idx) in samples"
       :key="idx"
@@ -150,13 +150,14 @@ body {
   position: absolute;
   bottom: 20px;
   right: 20px;
-  background-color: var(--blue);
+  // background-color: var(--blue);
   border-radius: 50%;
   width: 50px;
   height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.5;
+  // opacity: 0.5;
+  background-image: url("/public/icons/add.svg");
 }
 </style>

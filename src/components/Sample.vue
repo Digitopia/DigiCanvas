@@ -13,13 +13,13 @@
           <span
             :class="{ active: settings.sample.mode === 'oneshot' }"
             @click.stop="settings.sample.mode = 'oneshot'"
-            >➡️</span
-          >
+            id="one-shot-icon"
+          ></span>
           <span
             :class="{ active: settings.sample.mode === 'loop' }"
             @click.stop="settings.sample.mode = 'loop'"
-            >🔄</span
-          >
+            id="loop-icon"
+          ></span>
         </div>
         <div class="granularSliders space-out" v-show="mode == 'granular'">
           <!-- <div id="spray">Sp</div> -->
@@ -802,5 +802,19 @@ export default {
   #waveform {
     width: 100%;
   }
+}
+
+#loop-icon,
+#one-shot-icon {
+  width: 50px;
+  height: 50px;
+}
+
+#one-shot-icon {
+  background-image: url("/public/icons/one-shot.svg");
+}
+
+#loop-icon {
+  background-image: url("/public/icons/loop.svg");
 }
 </style>

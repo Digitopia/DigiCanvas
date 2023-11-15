@@ -1,44 +1,81 @@
 <template>
   <div id="reverb-area" ref="reverbArea">
+    <div id="sliders" v-show="showSliders">
+      <round-slider
+        v-for="(param, paramName, idx) in params"
+        :key="paramName"
+        v-model="param.value"
+        :start-angle="
+          idx * sliderArcAngle +
+          idx * sliderArcAngleStep -
+          sliderArcAngleAngleOffset
+        "
+        :end-angle="`+${sliderArcAngle}`"
+        line-cap="round"
+        width="12"
+        pathColor="rgba(255,255,255,0.4)"
+        rangeColor="var(--blue)"
+        :animation="false"
+        :radius="reverbRadius"
+        :showTooltip="false"
+        :keyboardAction="false"
+        :min="param.min"
+        :max="param.max"
+        :step="param.step"
+        :id="paramName"
+        handleSize="-3"
+        style="position: absolute"
+        :update="handleParamChange"
+      />
+    </div>
     <div
       id="reverb"
       ref="reverbDiv"
       @dblclick.stop="showSliders = !showSliders"
     ></div>
-    <div id="sliders" v-show="showSliders">
-      <div id="dampening">Da</div>
-      <div id="decay">De</div>
-      <div id="range">Ra</div>
-    </div>
   </div>
 </template>
 
 <script>
-import gsap from "gsap"
-import Draggable from "gsap/Draggable"
 import Tone from "tone"
+import RoundSlider from "vue-round-slider"
+import Draggable from "gsap/Draggable"
 
-import Nexus from "nexusui"
+import gsap from "gsap"
 
 gsap.registerPlugin(Draggable)
 
 export default {
+  components: {
+    RoundSlider,
+  },
+
   data() {
     return {
       reverbNode: null,
-      showSliders: false,
-      draggables: [],
-      sliders: {
-        dampening: 0,
-        range: 0,
-        decay: 0,
+      showSliders: true,
+      sliderArcAngle: 110,
+      params: {
+        dampening: { min: 0, max: 10000, step: 10, value: 3000 },
+        range: { min: 50, max: 200, step: 1, value: 100 },
+        decay: { min: 0, max: 1, step: 0.01, value: 0.2 },
       },
     }
   },
 
   computed: {
     reverbRadius() {
-      return this.sliders.range.value
+      return this.params.range.value
+    },
+
+    sliderArcAngleStep() {
+      const n = Object.keys(this.params).length
+      const remaining = 360 - n * this.sliderArcAngle
+      return remaining / n
+    },
+
+    sliderArcAngleAngleOffset() {
+      return this.sliderArcAngle + this.sliderArcAngleStep / 2 - 90
     },
   },
 
@@ -52,16 +89,14 @@ export default {
   },
 
   mounted() {
-    this.initDraggables()
-    this.initSliders()
+    this.initDraggable()
     this.initAudio()
     window.reverbNode = this.reverbNode
   },
 
   methods: {
-    initDraggables() {
-      // define dragging for reverb
-      this.draggables = Draggable.create("#reverb-area", {
+    initDraggable() {
+      this.draggable = Draggable.create("#reverb-area", {
         trigger: "#reverb",
         type: "x,y",
         // edgeResistance: 0.65,
@@ -73,48 +108,16 @@ export default {
       })[0]
     },
 
-    initSliders() {
-      const opts = {
-        size: [20, 100],
-        mode: "relative", // 'relative' or 'absolute'
-      }
-
-      // dampening
-      const dampeningSlider = new Nexus.Slider("#dampening", {
-        ...opts,
-        ...{ min: 0, max: 10000, step: 10, value: 3000 },
-      })
-      this.sliders.dampening = dampeningSlider
-      dampeningSlider.on("change", (val) => {
+    handleParamChange(roundSliderEvt) {
+      const paramName = roundSliderEvt.id
+      const val = roundSliderEvt.value
+      if (paramName === "dampening") {
         console.log("dampening is now", val)
         this.reverbNode.dampening.value = val
-      })
-
-      // range
-      const rangeSlider = new Nexus.Slider("#range", {
-        ...opts,
-        ...{ min: 50, max: 200, value: 150 },
-      })
-      this.sliders.range = rangeSlider
-
-      // decay
-      const decaySlider = new Nexus.Slider("#decay", {
-        ...opts,
-        ...{ min: 0, max: 1, value: 0.2 },
-      })
-      this.sliders.decay = decaySlider
-      decaySlider.on("change", (val) => {
+      } else if (paramName === "decay") {
         console.log("decay/roomsize is now", val)
         this.reverbNode.roomSize.value = val
-      })
-
-      // colors
-      dampeningSlider.colorize("accent", "var(--blue)")
-      dampeningSlider.colorize("fill", "var(--blue-light)")
-      rangeSlider.colorize("accent", "var(--blue)")
-      rangeSlider.colorize("fill", "var(--blue-light)")
-      decaySlider.colorize("accent", "var(--blue)")
-      decaySlider.colorize("fill", "var(--blue-light)")
+      }
     },
 
     initAudio() {
@@ -128,12 +131,12 @@ export default {
 <style lang="scss">
 #reverb-area {
   position: absolute;
-  width: 300px;
-  height: 300px;
+  width: 200px;
+  height: 200px;
   border-radius: 100%;
   background: radial-gradient(circle, var(--blue-light), rgba(0, 0, 0, 0.2));
   z-index: 10;
-  pointer-events: none; // so that can move a sample behind
+  // pointer-events: none; // so that can move a sample behind
 }
 
 #reverb {
@@ -141,21 +144,28 @@ export default {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: var(--blue);
+  // background: var(--blue);
   width: 50px;
   height: 50px;
   border-radius: 100%;
   pointer-events: auto; // to override the none of the parent
+  background-image: url("/public/icons/reverb.svg");
 }
 
 #sliders {
-  display: flex;
+  // display: flex;
+  position: absolute !important;
+  top: 0;
+  // left: 0;
+  // bottom: 0;
   pointer-events: auto; // to override the none of the parent
   width: 100%;
+}
 
-  #dampening {
-    width: 10px;
-    height: 100px;
+.rs-handle {
+  box-shadow: 0 0 2px 0 #000 !important;
+  &:hover {
+    cursor: pointer !important;
   }
 }
 </style>
