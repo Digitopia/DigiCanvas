@@ -8,7 +8,9 @@
       :audio="sample.audio"
       :idx="idx"
     />
-    <Reverb />
+    <Reverb style="bottom: 50px; left: 30px" />
+    <Delay style="bottom: 50px; left: 280px" />
+    <!-- <ReverbCustom /> -->
   </div>
 </template>
 
@@ -16,14 +18,18 @@
 import Tone from "tone"
 
 import Sample from "@/components/Sample"
+// import ReverbCustom from "@/components/ReverbCustom"
 import Reverb from "@/components/Reverb"
+import Delay from "@/components/Delay"
 
 export default {
   name: "App",
 
   components: {
     Sample,
+    // ReverbCustom,
     Reverb,
+    Delay,
   },
 
   data() {
@@ -157,7 +163,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  // opacity: 0.5;
+  opacity: 0.2;
   background-image: url("/public/icons/add.svg");
 }
 </style>

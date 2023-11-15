@@ -678,7 +678,7 @@ export default {
     updateDistance() {
       // Calculate the distance between this sample center and the global reverb center
       const reverbRect = document
-        .getElementById("reverb")
+        .getElementById("reverb-center")
         .getBoundingClientRect()
       const x1 = reverbRect.left + reverbRect.width / 2
       const y1 = reverbRect.top + reverbRect.height / 2

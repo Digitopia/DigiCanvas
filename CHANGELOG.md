@@ -23,6 +23,8 @@
 
 # Reuniao
 - favicon
+- missing delay icon
+- names of filename without accents and spaces
 
 ----
 
@@ -34,7 +36,7 @@
 - *FEATURES*
   - não parar de tocar enquanto se muda o rate
   - adicionar e remover sons
-  - [✔] **faders radiais para os efeitos**
+  - [✔] faders radiais para os efeitos
   - [ ] **implementar delay**
   - controlo de dinâmica no modo granular
   - o stretch também se aplicar aos grãos do modo granular
