@@ -4,7 +4,7 @@
   - [✔] atualizar ícones
   - [✔] smaller default reverb radius
   - [✔] set initial position for reverb and delay in canvas
-  - [ ] interacao com cada sample faz bump do z-index
+  - [✔] interacao com cada sample faz bump do z-index, mantendo effeitos sempre em cima
 *PLAY MODE*
   - [ ] **region de granular para usar em play mode para loop**
   - [ ] region de loop aparece logo by default (total sample) e para modo oneshot too

@@ -302,7 +302,7 @@ export default {
         // edgeResistance: 0.65,
         bounds: "html",
         inertia: true,
-        zIndexBoost: false,
+        zIndexBoost: true,
         onDrag: () => {
           this.updateDistance()
         },

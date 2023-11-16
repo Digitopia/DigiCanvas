@@ -121,6 +121,7 @@ export default {
         // edgeResistance: 0.65,
         bounds: "html",
         inertia: true,
+        zIndexBoost: false,
         onDrag: () => {
           // TODO:
           // this.$root.$emit("reverbOnDrag")
@@ -145,7 +146,7 @@ export default {
   height: 200px;
   border-radius: 100%;
   background: radial-gradient(circle, var(--blue-light), rgba(0, 0, 0, 0.2));
-  z-index: 10;
+  z-index: 10000;
   // pointer-events: none; // so that can move a sample behind
 }
 
