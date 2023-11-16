@@ -9,8 +9,8 @@
       :audio="sample.audio"
       :idx="idx"
     />
-    <Reverb style="bottom: 50px; left: 30px" />
     <Delay style="bottom: 50px; left: 280px" />
+    <Reverb style="bottom: 50px; left: 30px" />
   </div>
 </template>
 
@@ -80,15 +80,8 @@ export default {
   },
 
   mounted() {
-    this.samples.push(this.presets[1]) // 1-based as it's a dict with key referring to keyboard key
+    this.samples.push(this.presets[0])
     // this.samples = this.preset
-
-    // unselect controls
-    document.body.onclick = () => {
-      console.log("clicked body")
-      // any click in body, unselects the controls
-      this.$root.$emit("toggleControls")
-    }
 
     // quick entry of presets with keyboard (1, 2, 3, 4)
     document.addEventListener("keypress", (event) => {
@@ -113,7 +106,8 @@ export default {
 
   methods: {
     addSound() {
-      console.log("adding sound TODO")
+      // TODO:
+      console.log("adding sound...")
     },
 
     record() {
@@ -177,5 +171,8 @@ body {
   justify-content: center;
   opacity: 0.2;
   position: absolute;
+  &:hover {
+    cursor: not-allowed;
+  }
 }
 </style>

@@ -1,10 +1,5 @@
 <template>
-  <div
-    :id="areaId"
-    :ref="`${name}Area`"
-    class="effect-area"
-    style="z-index: 10000"
-  >
+  <div ref="area" class="effect-area" style="z-index: 10000">
     <div v-show="showSliders" class="sliders">
       <round-slider
         v-for="(param, paramName, idx) in params"
@@ -34,8 +29,7 @@
       />
     </div>
     <div
-      :id="centerId"
-      :ref="`${name}Center`"
+      ref="center"
       class="effect-center"
       :style="{ backgroundImage: `url('${icon}')` }"
       @dblclick.stop="showSliders = !showSliders"
@@ -83,14 +77,6 @@ export default {
   },
 
   computed: {
-    areaId() {
-      return `${this.name}-area`
-    },
-
-    centerId() {
-      return `${this.name}-center`
-    },
-
     sliderArcAngleStep() {
       const n = Object.keys(this.params).length
       const remaining = 360 - n * this.sliderArcAngle
@@ -110,10 +96,10 @@ export default {
       step: 1,
       value: 100,
       handler: (val) => {
+        console.log("handler", val)
         this.rangeRadius = val
-        const el = document.getElementById(this.areaId)
-        el.style.width = `${val * 2}px`
-        el.style.height = `${val * 2}px`
+        this.$refs.area.style.width = `${val * 2}px`
+        this.$refs.area.style.height = `${val * 2}px`
         // TODO: need to update in the root too
         // this.$root.reverbRadius = this.effectRadius
       },
@@ -128,10 +114,9 @@ export default {
 
   methods: {
     initDraggable() {
-      this.draggable = Draggable.create("#" + this.areaId, {
-        trigger: "#" + this.centerId,
+      Draggable.create(this.$refs.area, {
+        trigger: this.$refs.center,
         type: "x,y",
-        // edgeResistance: 0.65,
         bounds: "html",
         inertia: true,
         zIndexBoost: false,
@@ -141,14 +126,13 @@ export default {
           const highest = Math.max(
             ...Array.from(areas).map((area) => parseInt(area.style.zIndex))
           )
-          const area = document.getElementById(this.areaId)
-          area.style.zIndex = highest + 1
+          this.$refs.area.style.zIndex = highest + 1
         },
         onDrag: () => {
           // TODO:
           // this.$root.$emit("reverbOnDrag")
         },
-      })[0]
+      })
     },
 
     handleParamChange(roundSliderEvt) {
@@ -176,7 +160,6 @@ export default {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  // background: var(--blue);
   width: 50px;
   height: 50px;
   border-radius: 100%;
