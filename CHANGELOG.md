@@ -1,49 +1,51 @@
 # v0.4 (2023-11-17)
-- *MINOR*
+
+*MISC/MINOR*
+  - [✔] atualizar ícones
   - [✔] smaller default reverb radius
-- [✔] Atualizar ícones
-- [ ] rate atualiza no prox interval com current value
-- [ ] stddev como 1/4 do spray
-- [ ] refactor to fadeIn e fadeOut?
-- [ ] log rate slider
-- [ ] ts ui bug
-- [ ] ts dbclick to reset to rate=1
-- [ ] 100px = 1s (ou algo do genero), sample maiors mais espaco e vice versa
-- [ ] drag de scale no canto?
-- [ ] amplitude in grain mode too
-- [ ] ts em x e amplitude junto a play mode (oneshot ou loop)
-- [ ] region de granular para usar em play mode para loop
-- [ ] region de loop aparece logo by default (total sample) e para modo oneshot too
-- [ ] interacao com cada sample faz bump do z-index
-- [ ] reverb esta a ir para baixo quando se acrescentam novos sons
-- [ ] interacao com drag do nome não é possível quando controlos estão visíveis
-- [ ] outro efeito: FeedbackDelay tonejs
-- [ ] timestretch não está a funcionar a nivel audio no granular
-- [ ] grains com ts estão a ficar desfasados em y
+  - [✔] set initial position for reverb and delay in canvas
+  - [ ] interacao com cada sample faz bump do z-index
+*PLAY MODE*
+  - [ ] **region de granular para usar em play mode para loop**
+  - [ ] region de loop aparece logo by default (total sample) e para modo oneshot too
+  - [ ] missing back and forth
+*GRANULAR*
+  - [ ] amplitude in grain mode too
+  - [ ] rate atualiza no prox interval com current value
+  - [ ] stddev como 1/4 do spray
+  - [ ] curva dos sliders logarítmica, no caso do rate e grain size
+  - [ ] grains com ts estão a ficar desfasados em y
+  - [ ] refactor to fadeIn e fadeOut?
+*TIMESTRETCH*
+  - [ ] depois de fazer stretch os botões deixam de funcionar
+  - [ ] dbclick to reset to rate=1
+  - [ ] não está a funcionar a nivel audio no granular
+  - [ ] ui bug
+  - [ ] ts em x e amplitude junto a play mode (oneshot ou loop)
+  - [ ] feedback visual do stretch através da cor
+  - [ ] drag de scale no canto?
+*EFEITOS*
+  - [✔] faders radiais para os efeitos
+  - [✔] outro efeito: FeedbackDelay tonejs
+  - [ ] reverb esta a ir para baixo quando se acrescentam novos sons
+  - [ ] 100px = 1s (ou algo do genero), samples maioress mais espaco e vice versa
+*?*
+  - [ ] **parâmetros de um som estão a mexer num som diferente**
+*LATER*
+  - [ ] filtro low e high pass (também no modo granular?)
+  - [ ] adicionar e remover sons
+  - [ ] não parar de tocar enquanto se muda o rate
+  - [ ] o stretch também se aplicar aos grãos do modo granular
+  - [ ] interacao com drag do nome não é possível quando controlos estão visíveis
+  - [ ] toggle de overlay devia ser no mesmo botão
+  - [ ] scale efeitos from center
+  - [ ] quando o overlay dos settings está ligado não dá para interagir com os botões nem arrastar
+  - [ ] faders radiais com raio ligeiramente maior que o efeito
 
 # Reuniao
 - favicon
 - missing delay icon
 - names of filename without accents and spaces
-
-----
-
-- *BUGS*
-  - quando o overlay dos settings está ligado não dá para interagir com os botões nem arrastar
-  - toggle de overlay devia ser no mesmo botão
-  - parâmetros de um som estão a mexer num som diferente
-  - depois de fazer stretch os botões deixam de funcionar
-- *FEATURES*
-  - não parar de tocar enquanto se muda o rate
-  - adicionar e remover sons
-  - [✔] faders radiais para os efeitos
-  - [ ] **implementar delay**
-  - controlo de dinâmica no modo granular
-  - o stretch também se aplicar aos grãos do modo granular
-  - Feedback visual do stretch através da cor
-  - filtro low e high pass (também no modo granular?)
-- *OPTIMIZAÇÕES*
-  - curva dos faders logarítmica, no caso do rate e grain size
 
 ---
 

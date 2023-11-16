@@ -2,27 +2,32 @@
   <div :class="`container-${idx}`" class="container">
     <div class="sample" :class="{ playing: isPlaying }">
       <div
-        id="controls"
         v-show="controls === 'settings'"
+        id="controls"
         class="no-select"
         @click.stop
       >
-        <!-- <img src="/icons/oneShotLoop1.png" alt="" /> -->
-        <!-- <img src="/icons/forthLoop1.png" alt="" /> -->
         <div v-show="mode == 'sample'" class="space-out">
-          <span
+          <img
             :class="{ active: settings.sample.mode === 'oneshot' }"
+            class="overlay-icon"
+            src="icons/one-shot.svg"
             @click.stop="settings.sample.mode = 'oneshot'"
-            id="one-shot-icon"
-          ></span>
-          <span
+          />
+          <img
+            :class="{ active: settings.sample.mode === 'back-and-forth' }"
+            class="overlay-icon"
+            src="icons/back-and-forth.svg"
+            @click.stop="settings.sample.mode = 'back-and-forth'"
+          />
+          <img
             :class="{ active: settings.sample.mode === 'loop' }"
+            class="overlay-icon"
+            src="icons/loop.svg"
             @click.stop="settings.sample.mode = 'loop'"
-            id="loop-icon"
-          ></span>
+          />
         </div>
-        <div class="granularSliders space-out" v-show="mode == 'granular'">
-          <!-- <div id="spray">Sp</div> -->
+        <div v-show="mode == 'granular'" class="granularSliders space-out">
           <div :id="`grainSize-${idx}`">Gs</div>
           <div :id="`rate-${idx}`">Rt</div>
           <div :id="`random-${idx}`">Rd</div>
@@ -39,8 +44,8 @@
         </div>
       </div> -->
       <div
-        id="controls"
         v-show="controls === 'scale'"
+        id="controls"
         class="no-select"
         @click.stop
       >
@@ -49,18 +54,33 @@
           <div :id="`timestretch-${idx}`">St</div>
         </div>
       </div>
-      <div class="header" :id="`header-${idx}`">{{ name }}</div>
+      <div :id="`header-${idx}`" class="header">{{ name }}</div>
       <div id="waveform-wrapper">
-        <div :class="`waveform-${idx}`" ref="waveformDiv"></div>
+        <div ref="waveformDiv" :class="`waveform-${idx}`"></div>
         <canvas id="canvas" ref="canvas"></canvas>
       </div>
       <div id="buttons">
-        <div id="settings-btn" @click.stop="toggleControls('settings')">⚙️</div>
-        <div id="mode-btn" @click.stop="toggleMode()">
-          {{ mode === "sample" ? "▶️" : "*️⃣" }}
+        <div
+          id="settings-btn"
+          class="control-btn"
+          @click.stop="toggleControls('settings')"
+        >
+          <img src="icons/overlay.svg" class="control-icon" alt="" />
         </div>
-        <div id="scale-btn" @click.stop="toggleControls('scale')" style="">
-          ↕️
+        <div id="mode-btn" @click.stop="toggleMode()">
+          <img
+            :src="mode === 'sample' ? '/icons/play.svg' : '/icons/granular.svg'"
+            class="control-icon"
+            alt=""
+          />
+        </div>
+        <div
+          id="scale-btn"
+          style=""
+          class="control-btn"
+          @click.stop="toggleControls('scale')"
+        >
+          <img src="icons/stretch.svg" class="control-icon" alt="" />
         </div>
       </div>
     </div>
@@ -79,9 +99,18 @@ import { mapNumber, randomGaussian, clamp } from "@/utils"
 
 export default {
   props: {
-    audio: String,
-    name: String,
-    idx: Number,
+    audio: {
+      type: String,
+      required: true,
+    },
+    name: {
+      type: String,
+      required: true,
+    },
+    idx: {
+      type: Number,
+      required: true,
+    },
   },
 
   data() {
@@ -93,7 +122,7 @@ export default {
       mode: "sample", // or 'granular'
       settings: {
         sample: {
-          mode: "loop", // other options: loop
+          mode: "loop", // other options: 'one-shot', 'back-and-forth'
         },
         granular: {
           sourcePoint: null, // this is stored in [0, 1] range of the progress of the sample
@@ -721,12 +750,6 @@ export default {
   margin-top: 3px;
 }
 
-#controls-btn:hover,
-#mode-btn:hover,
-#scale-btn:hover {
-  cursor: pointer;
-}
-
 #controls {
   position: absolute;
   width: 100%;
@@ -804,17 +827,20 @@ export default {
   }
 }
 
-#loop-icon,
-#one-shot-icon {
+.overlay-icon {
   width: 50px;
   height: 50px;
+  opacity: 0.65;
 }
 
-#one-shot-icon {
-  background-image: url("/public/icons/one-shot.svg");
-}
-
-#loop-icon {
-  background-image: url("/public/icons/loop.svg");
+.control-icon {
+  border-radius: 3px;
+  padding: 2px;
+  background-color: var(--blue-light);
+  width: 20px;
+  height: 20px;
+  &:hover {
+    cursor: pointer;
+  }
 }
 </style>

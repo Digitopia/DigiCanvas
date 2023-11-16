@@ -1,8 +1,9 @@
 <template>
-  <div :id="`${name}-area`" class="effect-area" :ref="`${name}Area`">
-    <div class="sliders" v-show="showSliders">
+  <div :id="`${name}-area`" :ref="`${name}Area`" class="effect-area">
+    <div v-show="showSliders" class="sliders">
       <round-slider
         v-for="(param, paramName, idx) in params"
+        :id="paramName"
         :key="paramName"
         v-model="param.value"
         :start-angle="
@@ -13,26 +14,25 @@
         :end-angle="`+${sliderArcAngle}`"
         line-cap="round"
         width="12"
-        pathColor="rgba(255,255,255,0.4)"
-        rangeColor="var(--blue)"
+        path-color="rgba(255,255,255,0.4)"
+        range-color="var(--blue)"
         :animation="false"
         :radius="rangeRadius"
-        :showTooltip="false"
-        :keyboardAction="false"
+        :show-tooltip="false"
+        :keyboard-action="false"
         :min="param.min"
         :max="param.max"
         :step="param.step"
-        :id="paramName"
-        handleSize="-3"
+        handle-size="-3"
         style="position: absolute"
         :update="handleParamChange"
       />
     </div>
     <div
       :id="`${name}-center`"
+      :ref="`${name}Center`"
       class="effect-center"
       :style="`background-image: url('${icon}')`"
-      :ref="`${name}Center`"
       @dblclick.stop="showSliders = !showSliders"
     ></div>
   </div>

@@ -1,6 +1,7 @@
 <template>
   <div id="app" class="no-select">
     <div id="add-button" @click="addSound"></div>
+    <div id="record-button" @click="record"></div>
     <Sample
       v-for="(sample, idx) in samples"
       :key="idx"
@@ -10,7 +11,6 @@
     />
     <Reverb style="bottom: 50px; left: 30px" />
     <Delay style="bottom: 50px; left: 280px" />
-    <!-- <ReverbCustom /> -->
   </div>
 </template>
 
@@ -18,7 +18,6 @@
 import Tone from "tone"
 
 import Sample from "@/components/Sample"
-// import ReverbCustom from "@/components/ReverbCustom"
 import Reverb from "@/components/Reverb"
 import Delay from "@/components/Delay"
 
@@ -27,7 +26,6 @@ export default {
 
   components: {
     Sample,
-    // ReverbCustom,
     Reverb,
     Delay,
   },
@@ -117,6 +115,11 @@ export default {
     addSound() {
       console.log("adding sound TODO")
     },
+
+    record() {
+      // TODO:
+      console.log("recording...")
+    },
   },
 }
 </script>
@@ -153,10 +156,19 @@ body {
 }
 
 #add-button {
-  position: absolute;
   bottom: 20px;
   right: 20px;
-  // background-color: var(--blue);
+  background-image: url("/public/icons/add.svg");
+}
+
+#record-button {
+  bottom: 20px;
+  right: 80px;
+  background-image: url("/public/icons/record.svg");
+}
+
+#add-button,
+#record-button {
   border-radius: 50%;
   width: 50px;
   height: 50px;
@@ -164,6 +176,6 @@ body {
   align-items: center;
   justify-content: center;
   opacity: 0.2;
-  background-image: url("/public/icons/add.svg");
+  position: absolute;
 }
 </style>
