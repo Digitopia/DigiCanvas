@@ -168,7 +168,7 @@ export default {
   height: 200px;
   border-radius: 100%;
   background: radial-gradient(circle, var(--blue-light), rgba(0, 0, 0, 0.2));
-  // pointer-events: none; // so that can move a sample behind
+  pointer-events: none; // so that can move a sample behind
 }
 
 .effect-center {
