@@ -6,7 +6,6 @@
   - [✔] set initial position for reverb and delay in canvas
   - [✔] interacao com cada sample faz bump do z-index, mantendo effeitos sempre em cima
 *PLAY MODE*
-  - [ ] **region de granular para usar em play mode para loop**
   - [ ] region de loop aparece logo by default (total sample) e para modo oneshot too
   - [ ] missing back and forth
 *GRANULAR*
@@ -17,6 +16,7 @@
   - [ ] grains com ts estão a ficar desfasados em y
   - [ ] refactor to fadeIn e fadeOut?
 *TIMESTRETCH*
+  - [✔️] parâmetros de um som estão a mexer num som diferente
   - [ ] depois de fazer stretch os botões deixam de funcionar
   - [ ] dbclick to reset to rate=1
   - [ ] não está a funcionar a nivel audio no granular
@@ -29,8 +29,6 @@
   - [✔] outro efeito: FeedbackDelay tonejs
   - [ ] reverb esta a ir para baixo quando se acrescentam novos sons
   - [ ] 100px = 1s (ou algo do genero), samples maioress mais espaco e vice versa
-*?*
-  - [ ] **parâmetros de um som estão a mexer num som diferente**
 *LATER*
   - [ ] filtro low e high pass (também no modo granular?)
   - [ ] adicionar e remover sons

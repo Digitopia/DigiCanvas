@@ -1,5 +1,5 @@
 <template>
-  <div :class="`container-${idx}`" class="container">
+  <div :id="`container-${idx}`" class="container">
     <div class="sample" :class="{ playing: isPlaying }">
       <div
         v-show="controls === 'settings'"
@@ -296,7 +296,7 @@ export default {
 
       wavesurfer.load(this.audio)
 
-      Draggable.create(`.container-${this.idx}`, {
+      Draggable.create(`#container-${this.idx}`, {
         trigger: `#header-${this.idx}`,
         type: "x,y",
         // edgeResistance: 0.65,
@@ -337,8 +337,6 @@ export default {
       this.audioNode.connect(this.audioGainNode)
       this.audioGainNode.connect(this.effectSendNode)
       this.audioGainNode.connect(Tone.Master)
-
-      // this.audioNode.chain(this.effectSendNode, Tone.Master)
     },
 
     initGranularSliders() {
@@ -413,7 +411,6 @@ export default {
         )
         this.wavesurfer.setOptions({ barHeight: mappedBarHeight })
         console.log("using amplitude of ", val, "to apply in gain node")
-        // this.audioGainNode.gain.value = val
         this.audioGainNode.gain.exponentialRampToValueAtTime(val, 0.02)
         this.settings.scale.params.amplitude.value = val
       })
@@ -426,7 +423,7 @@ export default {
       this.settings.scale.timestretch = timestretch
       timestretch.on("change", (val) => {
         console.log("timestretch is now", val)
-        const container = document.querySelector(".container")
+        const container = document.getElementById(`container-${this.idx}`)
         container.style.width = `${this.width * val}px`
         console.log(this.width, container.style.width)
         this.settings.scale.params.timestretch.value = val
@@ -498,7 +495,6 @@ export default {
         this.wavesurfer.setOptions({ interact: "true" })
         this.initRegion()
       } else {
-        // this.wavesurfer.setOptions({ cursorColor: "transparent" })
         this.wavesurfer.setOptions({ interact: "false" })
         this.wavesurfer.setOptions({ progressColor: "lightblack" })
         clearInterval(this.settings.granular.params.rate.interval)
