@@ -5,8 +5,9 @@
   - [✔] smaller default reverb radius
   - [✔] set initial position for reverb and delay in canvas
   - [✔] interacao com cada sample faz bump do z-index, mantendo effeitos sempre em cima
+  - [✔] garantir z-index within efeitos too
 *PLAY MODE*
-  - [ ] region de loop aparece logo by default (total sample) e para modo oneshot too
+  - [ ] **region de loop aparece logo by default (total sample) e para modo oneshot too**
   - [ ] missing back and forth
 *GRANULAR*
   - [ ] amplitude in grain mode too
