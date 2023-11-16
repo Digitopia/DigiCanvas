@@ -1,21 +1,5 @@
 # v0.4 (2023-11-17)
 
-TLDR:
-- muitas changes a nível UI
-- com acrescentar suporte de regions para modo sample isto complicou um bocado a coisa
-  - antes estava a usar wavesurfer para a parte visual da onda
-  - mas o backend de audio era todo no Tone.js
-  - e mantinha o estado entre as duas libs
-  - ao usar regions em modo sample esta abordagem fica um bocado impraticavel (muitos mais edge cases)
-  - portanto, vou ver se consigo passar a usar o Wavesurfer para playback de modo sample
-  - e ligá-lo ao Tone.js para o resto do processamento
-  - esta foi a minha 1a abordagem que ao não conseguir tive que acabar por abondonar
-  - espero ter mais sorte desta vez, porque manter o estado nas duas libs com o suporte para as regions não seria bonito
-- as tasks do *GRANULAR* não me preocupam e são todas relativamente acessíveis
-- as *LATER* são para começar a pegar só quando as outras já estiverem
-- `~` signica WIP
-- `?` precisa esclarecimento
-
 *MISC*
   - [✔] atualizar ícones
 *SAMPLE*
