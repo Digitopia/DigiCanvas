@@ -123,8 +123,9 @@ export default {
   --blue: rgb(86, 143, 179);
   --blue-light: rgb(170, 197, 216);
   --yellow: rgb(255, 220, 96);
-  --border-radius: 20px;
+  --border-radius: 10px;
   --reverb-radius: 150px;
+  --buttons-height: 34px;
 }
 
 html,

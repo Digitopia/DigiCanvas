@@ -1,5 +1,5 @@
 <template>
-  <div ref="area" class="effect-area" style="z-index: 10000">
+  <div ref="area" class="effect-area">
     <div v-show="showSliders" class="sliders">
       <round-slider
         v-for="(param, paramName, idx) in params"

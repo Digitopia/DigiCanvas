@@ -1,32 +1,32 @@
 <template>
   <div ref="container" class="container">
     <div class="sample" :class="{ playing: isPlaying }">
+      <div
+        v-show="controls === 'settings'"
+        class="controls no-select"
+        @click.stop
+      >
+        <div v-show="mode == 'sample'" class="spaced-out">
+          <img
+            v-for="m in settings.sample.modes"
+            :key="m"
+            :class="{
+              active: settings.sample.mode === m,
+              disabled: m === 'back-and-forth',
+            }"
+            class="overlay-icon"
+            :src="`icons/${m}.svg`"
+            @click.stop="settings.sample.mode = m"
+          />
+        </div>
+        <div v-show="mode === 'granular'" class="granular-sliders spaced-out">
+          <div :id="`grainSize-${idx}`">Gs</div>
+          <div :id="`rate-${idx}`">Rt</div>
+          <div :id="`random-${idx}`">Rd</div>
+        </div>
+      </div>
       <div ref="header" class="header">{{ name }}</div>
       <div id="waveform-wrapper">
-        <div
-          v-show="controls === 'settings'"
-          class="controls no-select"
-          @click.stop
-        >
-          <div v-show="mode == 'sample'" class="spaced-out">
-            <img
-              v-for="m in settings.sample.modes"
-              :key="m"
-              :class="{
-                active: settings.sample.mode === m,
-                disabled: m === 'back-and-forth',
-              }"
-              class="overlay-icon"
-              :src="`icons/${m}.svg`"
-              @click.stop="settings.sample.mode = m"
-            />
-          </div>
-          <div v-show="mode === 'granular'" class="granular-sliders spaced-out">
-            <div :id="`grainSize-${idx}`">Gs</div>
-            <div :id="`rate-${idx}`">Rt</div>
-            <div :id="`random-${idx}`">Rd</div>
-          </div>
-        </div>
         <div ref="waveform" :class="`waveform-${idx}`"></div>
         <canvas id="canvas" ref="canvas"></canvas>
       </div>
@@ -41,7 +41,11 @@
             alt=""
           />
         </div>
-        <div ref="scaleButton" @click.stop="toggleControls('scale')">
+        <div
+          id="scale-btn"
+          ref="scaleButton"
+          @click.stop="toggleControls('scale')"
+        >
           <img
             id="scale-img"
             ref="scaleImage"
@@ -145,7 +149,7 @@ export default {
       canvasCtx: null,
       width: null,
       height: null,
-      pixelsPerSecond: 40,
+      pixelsPerSecond: 30,
       maxWidth: 800,
       minWidth: 250,
       originalDuration: null, // so that can revert with double click
@@ -232,6 +236,9 @@ export default {
     this.initGranularSliders()
     this.initCanvas()
 
+    this.$refs.container.style.minWidth = this.minWidth + "px"
+    this.$refs.container.style.maxWidth = this.maxWidth + "px"
+
     this.$root.$on("toggleControls", this.toggleControls)
     this.$root.$on("reverbOnDrag", this.updateDistance)
 
@@ -254,8 +261,8 @@ export default {
         container: this.$refs.waveform,
         backgroundColor: "white",
         waveColor: "lightgray",
-        progressColor: "lightblack",
-        cursorColor: "transparent",
+        progressColor: "lightgray",
+        cursorColor: "black",
         cursorWidth: 1,
         barWidth: 2,
         barHeight: 1, // goes from [0.1 to 4]
@@ -326,7 +333,8 @@ export default {
         console.log("originalWidth", this.originalWidth)
 
         this.resetTimestretch()
-        this.initScaleDraggable()
+        this.initResizeObserver()
+        // this.initScaleDraggable()
         // this.$refs.waveform.style.width = `${
         //   this.bufferDuration * this.pixelsPerSecond
         // }px`
@@ -521,6 +529,18 @@ export default {
       })
     },
 
+    initResizeObserver() {
+      const resizeObserver = new ResizeObserver((entries) => {
+        entries.forEach((entry) => {
+          const newWidth = entry.contentRect.width
+          console.log("newWidth", newWidth)
+          this.updateTimestretch(newWidth)
+        })
+      })
+
+      resizeObserver.observe(this.$refs.container)
+    },
+
     resetTimestretch() {
       this.updateTimestretch(this.originalDuration * this.pixelsPerSecond)
     },
@@ -618,14 +638,14 @@ export default {
       switch (this.mode) {
         case "sample":
           this.wavesurfer.setOptions({
-            progressColor: "lightblack",
+            // progressColor: "lightblack",
             interact: "false",
           })
           break
 
         case "granular":
           this.wavesurfer.setOptions({
-            progressColor: "lightgray",
+            // progressColor: "lightgray",
             interact: "true",
           })
           break
@@ -817,7 +837,7 @@ export default {
   display: flex;
   justify-content: space-between;
   // margin-top: 3px;
-  height: 24px;
+  height: var(--buttons-height);
 }
 
 .controls {
@@ -831,22 +851,26 @@ export default {
   span {
     opacity: 0.65;
   }
+  border-radius: var(--border-radius);
+  pointer-events: none;
 }
 
 .container {
   position: relative;
   width: 200px;
   margin: 0 auto;
-  // border-radius: 20px;
-  border-top-right-radius: var(--border-radius);
-  border-top-left-radius: var(--border-radius);
-  border-bottom-left-radius: 3px;
-  border-bottom-right-radius: 3px;
+  border-radius: var(--border-radius);
+  // border-top-right-radius: var(--border-radius);
+  // border-top-left-radius: var(--border-radius);
+  // border-bottom-left-radius: 3px;
+  // border-bottom-right-radius: 3px;
   background: rgb(255, 255, 255);
   &.playing {
     background: var(--blue-light) !important;
   }
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  resize: horizontal;
+  overflow: hidden;
 }
 
 .spaced-out {
@@ -900,31 +924,47 @@ export default {
   &.active {
     opacity: 1;
   }
+  pointer-events: auto !important;
 }
 
-#scale-btn {
-  background-color: var(--blue-light);
-  // width: 20px;
-  // height: 20px;
-}
-
-#scale-btn,
-#scale-img {
-  // background-image: url("/public/icons/stretch.svg") !important;
-  background-color: var(--blue-light);
-  &:hover {
-    cursor: move !important;
-  }
-}
+// #scale-btn,
+// #scale-img {
+//   // background-image: url("/public/icons/stretch.svg") !important;
+//   background-color: var(--blue-light);
+//   &:hover {
+//     cursor: move !important;
+//   }
+// }
 
 .control-icon {
   // border-radius: 3px;
   padding: 2px;
   background-color: var(--blue-light);
-  width: 20px;
-  height: 20px;
+  // width: calc(var(--buttons-height) * 0.9);
+  // height: calc(var(--buttons-height) * 0.9);
+  width: 30px;
+  height: 30px;
   &:hover {
     cursor: pointer;
+  }
+  pointer-events: auto;
+}
+
+#settings-btn > img {
+  border-top-right-radius: var(--border-radius);
+  border-bottom-left-radius: var(--border-radius);
+}
+
+#mode-btn > img {
+  border-top-left-radius: var(--border-radius);
+  border-top-right-radius: var(--border-radius);
+}
+
+#scale-img {
+  border-top-left-radius: var(--border-radius);
+  border-bottom-right-radius: var(--border-radius);
+  &:hover {
+    cursor: default !important;
   }
 }
 
