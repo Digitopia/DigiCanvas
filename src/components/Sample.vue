@@ -153,7 +153,7 @@ export default {
       height: null,
       pixelsPerSecond: 30,
       maxWidth: 800,
-      minWidth: 250,
+      minWidth: 200,
       originalDuration: null, // so that can revert with double click
       originalWidth: null, // so that can revert with double click
       effectSends: {
@@ -416,13 +416,7 @@ export default {
     updateTimestretch(width) {
       console.log("timestretch is now", width)
       this.$refs.container.style.width = `${width}px`
-      const playbackRate = mapNumber(
-        width,
-        0,
-        this.maxWidth,
-        0,
-        this.originalDuration
-      )
+      const playbackRate = 1 / (width / this.originalWidth)
 
       // interpolate color
       const startColor = [255, 255, 255, 0.8]
@@ -430,25 +424,17 @@ export default {
       const color = lerpColor(
         startColor,
         stopColor,
-        mapNumber(width, 0, this.maxWidth, 0, 1)
+        mapNumber(width, this.minWidth, this.maxWidth, 0, 1)
       )
       this.$refs.container.style.backgroundColor = `rgba(${color[0]},${color[1]},${color[2]},${color[3]})`
 
-      // this.settings.scale.params.timestretch.value = playbackRate
-      console.log({ playbackRate })
+      this.settings.scale.params.timestretch.value = playbackRate
+      console.log("playbackRate", playbackRate)
 
       this.resize()
 
-      // const invertedPlaybackRate = mapNumber(
-      //   val,
-      //   this.settings.scale.params.timestretch.min,
-      //   this.settings.scale.params.timestretch.max,
-      //   this.settings.scale.params.timestretch.max,
-      //   this.settings.scale.params.timestretch.min
-      // )
-      // console.log({ invertedPlaybackRate })
-      // this.audioNode.playbackRate = invertedPlaybackRate
-      // this.wavesurfer.setOptions({ audioRate: invertedPlaybackRate })
+      // this.audioNode.playbackRate = playbackRate
+      this.wavesurfer.setOptions({ audioRate: playbackRate })
     },
 
     initCanvas() {
@@ -493,32 +479,6 @@ export default {
             //   duration: 0.2,
             // })
             // return
-          } else {
-            // const mappedTimestretch = mapNumber(
-            //   this.endX,
-            //   0,
-            //   deltaX,
-            //   that.settings.scale.params.timestretch.min,
-            //   that.settings.scale.params.timestretch.max
-            // )
-            // const w = parseInt(that.$refs.container.style.width)
-            const newWidth = that.width + this.deltaX
-            if (newWidth > that.maxWidth || newWidth < that.minWidth) {
-              // gsap.to(this.target, {
-              //   x: 0,
-              //   y: 0,
-              //   ease: "power2.out",
-              //   duration: 0.01,
-              // })
-              // return
-            }
-            that.updateTimestretch(newWidth)
-            // gsap.to(this.target, {
-            //   x: 0,
-            //   y: 0,
-            //   ease: "power2.out",
-            //   duration: 0.01,
-            // })
           }
         },
       })
