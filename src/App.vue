@@ -8,6 +8,7 @@
       :name="sample.name"
       :audio="sample.audio"
       :idx="idx"
+      @mouseover.native="updateLastSampleInteractionIdx(idx)"
     />
     <Reverb ref="reverb" style="bottom: 50px; left: 30px" />
     <Delay ref="delay" style="bottom: 50px; left: 280px" />
@@ -32,8 +33,8 @@ export default {
 
   data() {
     return {
-      isPlaying: false,
       samples: [],
+      lastSampleInteractionIdx: null,
       presets: {
         0: {
           audio: "presets/guit_plus_background.mp3",
@@ -99,6 +100,10 @@ export default {
       ) {
         this.samples.push(this.presets[event.key])
       }
+      if (event.key === "Backspace") {
+        this.$destroy() // destroy the vue listeners, etc
+        this.$el.parentNode.removeChild(this.$el) // remove the element from the DOM
+      }
     })
 
     window.Tone = Tone
@@ -113,6 +118,10 @@ export default {
     record() {
       // TODO:
       console.log("recording...")
+    },
+
+    updateLastSampleInteractionIdx(idx) {
+      console.log("idx", idx)
     },
   },
 }

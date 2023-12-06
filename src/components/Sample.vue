@@ -113,7 +113,7 @@ export default {
             grainSize: {
               min: 0.2,
               max: 1.5,
-              value: 0.5,
+              value: 0.2,
             },
             rate: {
               // how often a new grain is produced [100ms, 2000ms]
@@ -131,8 +131,8 @@ export default {
           sliders: {},
           grains: [],
           envelope: {
-            attack: 0.1,
-            release: 0.1,
+            attack: 0.02,
+            release: 0.02,
           },
         },
         scale: {
@@ -357,8 +357,10 @@ export default {
         ...this.settings.granular.params.grainSize,
       })
       this.settings.granular.sliders.grainSize = grainSizeSlider
+
       grainSizeSlider.on("change", (val) => {
-        console.log("grainSize is now", val)
+        console.log("grainSize is now", val.toFixed(2))
+
         this.settings.granular.params.grainSize.value = val
       })
 
@@ -505,8 +507,7 @@ export default {
         console.log("updated region")
         if (this.mode === "granular") {
           const mx = (region.end - region.start) / 2 + region.start
-          const source = this.timestamp2Progress(mx)
-          this.settings.granular.source = source
+          this.settings.granular.origin = this.timestamp2Progress(mx)
         } else if (this.mode === "sample") {
           if (!this.isPlaying) {
             // to avoid UI jump
@@ -531,6 +532,7 @@ export default {
       console.log("resizing...")
       this.width = document.querySelector("#waveform-wrapper").clientWidth
       this.height = document.querySelector("#waveform-wrapper").clientHeight
+      console.log({ height: this.height })
       console.log(this.width, this.height)
       this.canvas.setAttribute("width", this.width)
       this.canvas.setAttribute("height", this.height)
@@ -543,6 +545,7 @@ export default {
         this.settings.region.play()
         this.audioGainNode.gain.exponentialRampToValueAtTime(1, 0.02)
       } else {
+        this.resize()
         this.addGrain()
         this.updateRateInterval()
       }
@@ -644,39 +647,17 @@ export default {
         this.drawGrains()
       }, this.grainSize * 1000)
 
-      grain.volume.value = -120
+      grain.volume.value = -6
       window.grain = grain
       grain.connect(this.audioGainNode)
 
       // set offsets according to envelope
       const now = Tone.context.currentTime
-      // const gs = this.grainSize
-      // const useEnvelope = true
-      // if (!useEnvelope) {
-      //   // connect audio node to both effect send
-      //   grain.connect(this.effectSendNode)
-      //   // and destination
-      //   grain.connect(Tone.Master)
-      // } else {
-      // const gain = new Tone.Gain(0)
-      // grain.connect(gain)
-      // gain.connect(this.audioGainNode)
-
-      // const attackOffset = now + this.settings.granular.envelope.attack
-      // const releaseOffset = Math.max(
-      //   gs - this.settings.granular.envelope.release,
-      //   this.settings.granular.envelope.release
-      // )
-
-      // gain.gain.linearRampToValueAtTime(1, attackOffset)
-      // gain.gain.linearRampToValueAtTime(0, releaseOffset)
-      // gain.gain.linearRampToValueAtTime(1, "+0.02")
-
       console.log({ now, grainOffset, grainSize: this.grainSize })
 
       // play grain
-      grain.start(now, grainOffset, this.grainSize)
-      // grain.start(now, grainOffset)
+      // grain.start(now, grainOffset, this.grainSize) // this clicks!
+      grain.start("+0", grainOffset, this.grainSize) // this doesn't!
 
       // draw grains
       const x = mapNumber(grainOffset, 0, this.bufferDuration, 0, this.width)
@@ -711,6 +692,7 @@ export default {
         // circle
         this.canvasCtx.beginPath()
         const r = ((this.width / this.bufferDuration) * this.grainSize) / 2
+        console.log("HEIGHT", this.height)
         this.canvasCtx.arc(x, this.height / 2, r, 0, 2 * Math.PI)
         // this.canvasCtx.stroke()
         this.canvasCtx.fill()

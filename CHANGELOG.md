@@ -26,7 +26,7 @@
   - [✔️] overlay controls overlay tbm row de buttons, mas permite click toggle via clickthrough
   - [✔️] voltar a arredondar cantos
   - [✔️] diminuir area do sample (40px/sec->30) e aumentar height de buttons row (24px->34)
-  - [ ] missing delay icon @Filipe
+  - [!] missing delay icon @Filipe
 *PLAY MODE*
   - [✔️] region de loop aparece logo by default (total sample) e para modo oneshot too
   - [-] add back and forth (bc negative playback rate not supported in wavesurfer)
@@ -42,10 +42,12 @@
 *GRANULAR*
   - [✔️] amplitude in grain mode too (is not connecting via the gain node)
   - [✔️] grains com ts estão a ficar desfasados em y
-  - [?] refactor to fadeIn e fadeOut? (still not fixing)
-  - [ ] rate atualiza no prox interval com current value
-  - [ ] stddev como 1/4 do spray
+  - [✔️] atualizar origin on region drag
+  - [✔️] refactor to fadeIn e fadeOut
+  - [ ] grains estão a ficar desfasados em y de novos samples
   - [ ] curva dos sliders logarítmica, no caso do rate e grain size
+  - [ ] stddev como 1/4 do spray
+  - [ ] rate atualiza no prox interval com current value
 
 - conflito de UI: em modo sample, drag region vs trigger play
 - [?] ts em x e amplitude junto a play mode (oneshot ou loop)
