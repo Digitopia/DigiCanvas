@@ -67,7 +67,8 @@ import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.esm.js"
 import Draggable from "gsap/Draggable"
 import Nexus from "nexusui"
 import Tone from "tone"
-// import gsap from "gsap"
+// eslint-disable-next-line no-unused-vars
+import gsap from "gsap"
 
 import { mapNumber, randomGaussian, clamp, lerpColor } from "@/utils"
 
@@ -90,6 +91,7 @@ export default {
   data() {
     return {
       audioNode: null, // to be used as source of the grains
+      audioElementSource: null, // to be used to route the audio from waveform into the Tone.js
       wavesurfer: null,
       controls: "", // other options: 'settings', 'granular' (ui)
       mode: "sample", // or 'granular'
@@ -196,10 +198,6 @@ export default {
   watch: {
     isPlaying() {
       console.log("isPlaying", this.isPlaying)
-      // TODO: update the setBackgroundColor to v7
-      // if (this.isPlaying)
-      //   this.wavesurfer.setBackgroundColor("var(--blue-light)")
-      // else this.wavesurfer.setBackgroundColor("white")
     },
 
     mode() {
@@ -267,6 +265,10 @@ export default {
 
       wavesurfer.on("ready", () => {
         console.log("waveform ready for", this.audio)
+        this.audioElementSource = Tone.context.createMediaElementSource(
+          wavesurfer.media
+        )
+        Tone.connect(this.audioElementSource, this.audioGainNode)
       })
 
       wavesurfer.on("interaction", () => {
@@ -280,12 +282,6 @@ export default {
       wavesurfer.on("pause", () => {
         console.log("pause event")
       })
-
-      // wavesurfer.on("finish", () => {
-      //   wavesurfer.seekTo(0)
-      //   this.isPlaying = false
-      //   if (this.settings.sample.mode == "loop") this.play()
-      // })
 
       this.$refs.waveform.addEventListener("click", () => {
         if (this.controls) return
@@ -307,7 +303,6 @@ export default {
       Draggable.create(this.$refs.container, {
         trigger: this.$refs.header,
         type: "x,y",
-        // edgeResistance: 0.65,
         bounds: "html",
         zIndexBoost: true,
         onDrag: () => {
@@ -318,7 +313,6 @@ export default {
 
       this.wavesurfer = wavesurfer
       window.wavesurfer = wavesurfer
-      this.$root.wavesurfer = this.wavesurfer
     },
 
     initAudio() {
@@ -334,10 +328,7 @@ export default {
 
         this.resetTimestretch()
         this.initResizeObserver()
-        // this.initScaleDraggable()
-        // this.$refs.waveform.style.width = `${
-        //   this.bufferDuration * this.pixelsPerSecond
-        // }px`
+        this.initScaleDraggable()
         setTimeout(() => {
           this.initRegion()
         }, 200) // TODO: requiring timeout
@@ -358,8 +349,7 @@ export default {
         this.audioGainNode.connect(this.effectSends[effect])
       })
 
-      // connect audio node to gain and master (previously connect to effect sends)
-      this.audioNode.connect(this.audioGainNode)
+      // and create audio gain to master
       this.audioGainNode.connect(Tone.Master)
     },
 
@@ -496,6 +486,13 @@ export default {
               that.settings.scale.params.amplitude.max
             )
             that.updateAmplitude(mappedAmplitude)
+            // gsap.to(this.target, {
+            //   x: 0,
+            //   y: 0,
+            //   ease: "power2.out",
+            //   duration: 0.2,
+            // })
+            // return
           } else {
             // const mappedTimestretch = mapNumber(
             //   this.endX,
@@ -570,8 +567,8 @@ export default {
         end,
         content: "",
         color: "rgba(170, 197, 216, 0.1)",
-        resize: true,
-        drag: true,
+        // resize: true,
+        // drag: true,
         loop: false, // NOTE: his prop doesn't work, so need to work around with region events
       })
       console.log("added region", this.settings.region)
@@ -821,7 +818,7 @@ export default {
       const val = mapNumber(distance, 0, effectRadius, 1, 0).toFixed(2)
       console.log(val)
 
-      // this.effectSends[effectName].gain.exponentialRampToValueAtTime(val, 0.02)
+      this.effectSends[effectName].gain.exponentialRampToValueAtTime(val, 0.02)
     },
   },
 }
