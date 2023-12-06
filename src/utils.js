@@ -9,6 +9,10 @@ export function randomFloat(min, max) {
   return Math.random() * (max - min) + min
 }
 
+export function randomInt(min, max) {
+  return Math.round(randomFloat(min, max))
+}
+
 // taken from https://stackoverflow.com/questions/25582882/javascript-math-random-normal-distribution-gaussian-bell-curve
 export function randomGaussian(mean = 0, stdev = 1) {
   const u = 1 - Math.random() // Converting [0,1) to (0,1]
