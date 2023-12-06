@@ -49,7 +49,8 @@ export default {
       this.params.delayTime.value,
       this.params.feedback.value
     ).toMaster()
-    this.$root.delayNode = this.delayNode
+    if (!this.$root.effectNodes) this.$root.effectNodes = []
+    this.$root.effectNodes["delay"] = this.delayNode
   },
 }
 </script>

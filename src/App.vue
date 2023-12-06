@@ -9,8 +9,8 @@
       :audio="sample.audio"
       :idx="idx"
     />
-    <Delay style="bottom: 50px; left: 280px" />
-    <Reverb style="bottom: 50px; left: 30px" />
+    <Reverb ref="reverb" style="bottom: 50px; left: 30px" />
+    <Delay ref="delay" style="bottom: 50px; left: 280px" />
   </div>
 </template>
 

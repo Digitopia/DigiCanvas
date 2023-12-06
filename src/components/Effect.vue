@@ -129,8 +129,12 @@ export default {
           this.$refs.area.style.zIndex = highest + 1
         },
         onDrag: () => {
-          // TODO:
-          // this.$root.$emit("reverbOnDrag")
+          // this.$root.$emit("effectDrag", {
+          //   name: this.name,
+          //   el: this.$el,
+          //   radius: this.rangeRadius,
+          // })
+          this.$root.$emit("effectDrag", this)
         },
       })
     },

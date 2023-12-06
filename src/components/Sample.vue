@@ -89,13 +89,15 @@ export default {
 
   data() {
     return {
-      audioNode: null,
+      audioNode: null, // to be used as source of the grains
       wavesurfer: null,
       controls: "", // other options: 'settings', 'granular' (ui)
       mode: "sample", // or 'granular'
       settings: {
         sample: {
-          modes: ["one-shot", "back-and-forth", "loop"],
+          // modes: ["one-shot", "back-and-forth", "loop"],
+          modes: ["one-shot", "loop"],
+          // mode: "one-shot",
           mode: "loop",
         },
         granular: {
@@ -142,8 +144,6 @@ export default {
         },
       },
       region: null, // regions are used in both granular and delimiters for the play and loop
-      effectSendNode: null, // FIXME: this was working for reverb only
-      distance: null, // FIXME: this was working for reverb only
       isPlaying: false,
       canvas: null,
       canvasCtx: null,
@@ -154,6 +154,10 @@ export default {
       minWidth: 250,
       originalDuration: null, // so that can revert with double click
       originalWidth: null, // so that can revert with double click
+      effectSends: {
+        reverb: null,
+        delay: null,
+      },
     }
   },
 
@@ -172,12 +176,6 @@ export default {
       if (this.audioNode && this.audioNode.buffer)
         return this.audioNode.buffer.duration
       return NaN
-    },
-
-    effectSendGainValue() {
-      // FIXME: this was working for reverb only
-      if (this.distance > this.$root.reverbRadius) return 0
-      return mapNumber(this.distance, 0, this.$root.reverbRadius, 1, 0)
     },
 
     grainSize() {
@@ -206,30 +204,21 @@ export default {
 
     mode() {
       console.log("mode is now", this.mode)
-      this.audioNode.loop = this.settings.sample.mode == "loop"
     },
 
-    // FIXME: this was working for reverb only
-    effectSendGainValue() {
-      console.log(
-        "updating effectSendGainValue",
-        this.name,
-        this.effectSendGainValue
-      )
-      // this.effectSendNode.gain.value = this.effectSendGainValue
-
-      if (this.effectSendGainValue > 0) {
-        this.effectSendNode.gain.exponentialRampToValueAtTime(
-          this.effectSendGainValue,
-          0.02
-        )
-      }
+    controls() {
+      console.log("controls are now", this.controls)
+      this.settings.region.setOptions({
+        resize: !this.controls,
+        drag: !this.controls,
+      })
     },
   },
 
   mounted() {
     window.WaveSurfer = WaveSurfer
     window.region = this.settings.region
+    window.settings = this.settings
 
     this.initWaveform()
     this.initAudio()
@@ -240,7 +229,7 @@ export default {
     this.$refs.container.style.maxWidth = this.maxWidth + "px"
 
     this.$root.$on("toggleControls", this.toggleControls)
-    this.$root.$on("reverbOnDrag", this.updateDistance)
+    this.$root.$on("effectDrag", this.effectDrag)
 
     setTimeout(() => {
       this.resize()
@@ -262,7 +251,7 @@ export default {
         backgroundColor: "white",
         waveColor: "lightgray",
         progressColor: "lightgray",
-        cursorColor: "black",
+        cursorColor: "black", // start black, should change to black
         cursorWidth: 1,
         barWidth: 2,
         barHeight: 1, // goes from [0.1 to 4]
@@ -276,11 +265,20 @@ export default {
       // Initialize the Regions plugin
       this.regionsPlugin = wavesurfer.registerPlugin(RegionsPlugin.create())
 
-      // wavesurfer is just for showing the waveform (or is it?)
-      wavesurfer.setMuted(true)
-
       wavesurfer.on("ready", () => {
         console.log("waveform ready for", this.audio)
+      })
+
+      wavesurfer.on("interaction", () => {
+        console.log("interaction event")
+      })
+
+      wavesurfer.on("play", () => {
+        console.log("play event")
+      })
+
+      wavesurfer.on("pause", () => {
+        console.log("pause event")
       })
 
       // wavesurfer.on("finish", () => {
@@ -290,6 +288,8 @@ export default {
       // })
 
       this.$refs.waveform.addEventListener("click", () => {
+        if (this.controls) return
+        console.log("click")
         if (this.mode === "sample") {
           if (wavesurfer.isPlaying()) {
             console.log("stopping...")
@@ -311,7 +311,8 @@ export default {
         bounds: "html",
         zIndexBoost: true,
         onDrag: () => {
-          this.updateDistance()
+          this.$root.$emit("effectDrag", this.$parent.$refs.reverb.$children[0])
+          this.$root.$emit("effectDrag", this.$parent.$refs.delay.$children[0])
         },
       })
 
@@ -325,7 +326,6 @@ export default {
       this.audioNode = new Tone.Player(this.audio, () => {
         console.log("loaded audio", this.audio)
         this.originalDuration = this.bufferDuration
-        this.audioNode.loop = this.settings.sample.mode == "loop"
         this.$refs.container.style.width = `${
           this.bufferDuration * this.pixelsPerSecond
         }px`
@@ -341,10 +341,6 @@ export default {
         setTimeout(() => {
           this.initRegion()
         }, 200) // TODO: requiring timeout
-
-        this.audioNode.onstop = () => {
-          console.log("audio node stopped")
-        }
       })
       this.audioNode.volume.value = -6
       window.audioNode = this.audioNode
@@ -354,14 +350,16 @@ export default {
         this.settings.scale.params.amplitude.value
       )
 
-      // init effect send (gain) node
-      this.effectSendNode = new Tone.Gain(0)
-      // and connect it to global reverb
-      this.effectSendNode.connect(this.$root.reverbNode)
+      // create effect send (gain) nodes and connect them to the global effect nodes
+      const effects = ["reverb", "delay"]
+      effects.forEach((effect) => {
+        this.effectSends[effect] = new Tone.Gain(0)
+        this.effectSends[effect].connect(this.$root.effectNodes[effect])
+        this.audioGainNode.connect(this.effectSends[effect])
+      })
 
-      // connect audio node to both effect send
+      // connect audio node to gain and master (previously connect to effect sends)
       this.audioNode.connect(this.audioGainNode)
-      this.audioGainNode.connect(this.effectSendNode)
       this.audioGainNode.connect(Tone.Master)
     },
 
@@ -571,11 +569,16 @@ export default {
         start,
         end,
         content: "",
-        color: "rgba(170, 197, 216, 0.2)",
+        color: "rgba(170, 197, 216, 0.1)",
         resize: true,
+        drag: true,
+        loop: false, // NOTE: his prop doesn't work, so need to work around with region events
       })
       console.log("added region", this.settings.region)
       window.region = this.settings.region
+
+      // to avoid UI jump at play
+      this.stop()
 
       this.regionsPlugin.on("region-updated", (region) => {
         console.log("updated region")
@@ -584,15 +587,21 @@ export default {
           const source = this.timestamp2Progress(mx)
           this.settings.granular.source = source
         } else if (this.mode === "sample") {
-          this.audioNode.setLoopPoints(region.start, region.end)
+          if (!this.isPlaying) {
+            // to avoid UI jump
+            this.stop()
+          }
         }
       })
 
+      // workaround for looping region, since loop proper of region not working...
       this.regionsPlugin.on("region-out", (region) => {
         console.log("region out", region)
         if (this.isLooping) {
           console.log("playing region again")
           region.play()
+        } else {
+          this.stop()
         }
       })
 
@@ -613,18 +622,18 @@ export default {
     },
 
     play() {
-      // this.wavesurfer.seekTo(this.timestamp2Progress(this.audioNode.loopStart))
-      // this.audioNode.restart()
+      this.wavesurfer.setOptions({ cursorColor: "black" })
       this.settings.region.play()
-      this.wavesurfer.play()
       this.isPlaying = true
-      this.audioNode.start()
     },
 
     stop() {
-      // this.wavesurfer.stop()
+      this.wavesurfer.setOptions({ cursorColor: "transparent" })
+      this.wavesurfer.stop()
+      this.wavesurfer.seekTo(
+        this.timestamp2Progress(this.settings.region.start)
+      )
       this.isPlaying = false
-      this.audioNode.stop()
     },
 
     toggleControls(controls) {
@@ -791,23 +800,28 @@ export default {
       }
     },
 
-    updateDistance() {
-      // TODO: calculate distante to effects
-      return
-      // Calculate the distance between this sample center and the global reverb center
-      // const reverbRect = document
-      //   .getElementById("reverb-center")
-      //   .getBoundingClientRect()
-      // const x1 = reverbRect.left + reverbRect.width / 2
-      // const y1 = reverbRect.top + reverbRect.height / 2
+    effectDrag(evt) {
+      // console.log("got event", evt.$el, evt.name, evt.rangeRadius)
+      // Calculate the distance between this sample center and the effect center
+      const { name: effectName, rangeRadius: effectRadius } = evt
+      const effectElem = evt.$el
+      const effectRect = effectElem.getBoundingClientRect()
+      const x1 = effectRect.left + effectRect.width / 2
+      const y1 = effectRect.top + effectRect.height / 2
+      const waveformRect = this.$refs.waveform.getBoundingClientRect()
+      const x2 = waveformRect.left + waveformRect.width / 2
+      const y2 = waveformRect.top + waveformRect.height / 2
+      const dx = x1 - x2
+      const dy = y1 - y2
+      const distance = Math.round(Math.sqrt(dx * dx + dy * dy))
 
-      // const waveformRect = this.$refs.waveform.getBoundingClientRect()
-      // const x2 = waveformRect.left + waveformRect.width / 2
-      // const y2 = waveformRect.top + waveformRect.height / 2
-      // const dx = x1 - x2
-      // const dy = y1 - y2
-      // this.distance = Math.sqrt(dx * dx + dy * dy)
-      // console.log("distance to", this.name, Math.round(this.distance))
+      console.log(`"d(${this.name}, ${effectName})"`, distance)
+
+      if (distance > effectRadius) return
+      const val = mapNumber(distance, 0, effectRadius, 1, 0).toFixed(2)
+      console.log(val)
+
+      // this.effectSends[effectName].gain.exponentialRampToValueAtTime(val, 0.02)
     },
   },
 }
@@ -883,9 +897,11 @@ export default {
 
 .granular-sliders {
   display: flex;
-  pointer-events: auto; // to override the none of the parent
   width: 100%;
   font-size: 0.9rem;
+  img {
+    pointer-events: auto; // to override the none of the parent
+  }
 }
 
 .grain {
