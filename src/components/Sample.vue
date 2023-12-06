@@ -14,7 +14,7 @@
               active: settings.sample.mode === m,
               disabled: m === 'back-and-forth',
             }"
-            class="overlay-icon"
+            class="sample-mode-icon"
             :src="`icons/${m}.svg`"
             @click.stop="settings.sample.mode = m"
           />
@@ -31,7 +31,11 @@
         <canvas id="canvas" ref="canvas"></canvas>
       </div>
       <div id="buttons">
-        <div id="settings-btn" @click.stop="toggleControls('settings')">
+        <div
+          id="settings-btn"
+          :class="{ active: controls === 'settings' }"
+          @click.stop="toggleControls('settings')"
+        >
           <img src="icons/overlay.svg" class="control-icon" alt="" />
         </div>
         <div id="mode-btn" @click.stop="toggleMode()">
@@ -44,11 +48,7 @@
         <div
           id="scale-btn"
           ref="scaleButton"
-          style="
-            background-image: url('icons/stretch.svg');
-            /* width: 30px; */
-            /* height: 30px; */
-          "
+          style="background-image: url('icons/stretch.svg')"
           @click.stop="toggleControls('scale')"
         >
           <img
@@ -99,7 +99,7 @@ export default {
       audioElementSource: null, // to be used to route the audio from waveform into the Tone.js
       wavesurfer: null,
       controls: "", // other options: 'settings', 'granular' (ui)
-      mode: "sample", // or 'granular'
+      mode: "granular", // or 'granular'
       settings: {
         sample: {
           // modes: ["one-shot", "back-and-forth", "loop"],
@@ -108,12 +108,12 @@ export default {
           mode: "loop",
         },
         granular: {
-          origin: null, // this is stored in [0, 1] range of the progress of the sample
+          origin: 0.5, // this is stored in [0, 1] range of the progress of the sample (start at middle)
           params: {
             grainSize: {
-              min: 0.05,
+              min: 0.2,
               max: 1.5,
-              value: 1.5,
+              value: 0.5,
             },
             rate: {
               // how often a new grain is produced [100ms, 2000ms]
@@ -125,14 +125,14 @@ export default {
               // how random (0 is at center, 1 is almost linearly, but still follows normal distribution)
               min: 0.0,
               max: 1.0,
-              value: 0.5,
+              value: 0,
             },
           },
           sliders: {},
           grains: [],
           envelope: {
-            attack: 0.2,
-            release: 0.2,
+            attack: 0.1,
+            release: 0.1,
           },
         },
         scale: {
@@ -205,15 +205,12 @@ export default {
       console.log("isPlaying", this.isPlaying)
     },
 
-    mode() {
-      console.log("mode is now", this.mode)
-    },
-
     controls() {
       console.log("controls are now", this.controls)
+      const bool = this.controls === null || this.controls === "scale"
       this.settings.region.setOptions({
-        resize: !this.controls,
-        drag: !this.controls,
+        resize: bool,
+        drag: bool,
       })
     },
   },
@@ -237,6 +234,8 @@ export default {
     setTimeout(() => {
       this.resize()
     }, 1000)
+
+    window.grains = this.settings.granular.grains
   },
 
   methods: {
@@ -276,32 +275,20 @@ export default {
         Tone.connect(this.audioElementSource, this.audioGainNode)
       })
 
-      wavesurfer.on("interaction", () => {
-        console.log("interaction event")
-      })
+      // wavesurfer.on("interaction", () => {
+      //   console.log("interaction event")
+      // })
 
-      wavesurfer.on("play", () => {
-        console.log("play event")
-      })
+      // wavesurfer.on("play", () => {
+      //   console.log("play event")
+      // })
 
-      wavesurfer.on("pause", () => {
-        console.log("pause event")
-      })
+      // wavesurfer.on("pause", () => {
+      //   console.log("pause event")
+      // })
 
-      this.$refs.waveform.addEventListener("click", () => {
-        if (this.controls) return
-        console.log("click")
-        if (this.mode === "sample") {
-          if (wavesurfer.isPlaying()) {
-            console.log("stopping...")
-            this.stop()
-          } else {
-            this.play()
-          }
-        } else if (this.mode === "granular") {
-          // console.log(evt)
-        }
-      })
+      this.wavesurfer = wavesurfer
+      this.$refs.waveform.addEventListener("click", this.onClick)
 
       wavesurfer.load(this.audio)
 
@@ -316,7 +303,6 @@ export default {
         },
       })
 
-      this.wavesurfer = wavesurfer
       window.wavesurfer = wavesurfer
     },
 
@@ -336,6 +322,7 @@ export default {
         this.initScaleDraggable()
         setTimeout(() => {
           this.initRegion()
+          this.stop() // to avoid UI jump at play
         }, 200) // TODO: requiring timeout
       })
       this.audioNode.volume.value = -6
@@ -438,8 +425,7 @@ export default {
 
       this.resize()
 
-      // this.audioNode.playbackRate = playbackRate
-      this.wavesurfer.setOptions({ audioRate: playbackRate })
+      this.wavesurfer.setPlaybackRate(playbackRate, false)
     },
 
     initCanvas() {
@@ -455,8 +441,6 @@ export default {
         type: "y",
         lockAxis: true,
         bounds: {
-          // minX: -deltaX,
-          // maxX: deltaX,
           minY: 0,
           maxY: -128,
         },
@@ -479,13 +463,6 @@ export default {
               that.settings.scale.params.amplitude.max
             )
             that.updateAmplitude(mappedAmplitude)
-            // gsap.to(this.target, {
-            //   x: 0,
-            //   y: 0,
-            //   ease: "power2.out",
-            //   duration: 0.2,
-            // })
-            // return
           }
         },
       })
@@ -510,40 +487,19 @@ export default {
 
     initRegion() {
       console.log("initting region...")
-      let start, end
-      if (this.mode === "granular") {
-        if (!this.settings.granular.origin) {
-          // if no source point set to middle
-          this.settings.granular.origin = 0.5
-        }
-        // if (!this.settings.region.start) {
-        //   const relX =
-        //     this.settings.granular.origin * this.bufferDuration
-        //   const randOffsetRange = this.grainSize * 2
-        //   start = relX - randOffsetRange
-        //   end = relX + randOffsetRange
-        // } else {
-        //   start = this.settings.region.start
-        //   end = this.settings.region.end
-        // }
-      } else if (this.mode === "sample") {
-        start = 2.5
-        end = this.bufferDuration - 2.5
-      }
+      const start = this.progress2Timestamp(0.4)
+      const end = this.progress2Timestamp(0.6)
       this.settings.region = this.regionsPlugin.addRegion({
         start,
         end,
         content: "",
         color: "rgba(170, 197, 216, 0.1)",
-        // resize: true,
-        // drag: true,
+        resize: true,
+        drag: true,
         loop: false, // NOTE: his prop doesn't work, so need to work around with region events
       })
       console.log("added region", this.settings.region)
       window.region = this.settings.region
-
-      // to avoid UI jump at play
-      this.stop()
 
       this.regionsPlugin.on("region-updated", (region) => {
         console.log("updated region")
@@ -569,11 +525,6 @@ export default {
           this.stop()
         }
       })
-
-      // if (this.mode === "granular") {
-      //   this.updateRateInterval()
-      //   this.addGrain()
-      // }
     },
 
     resize() {
@@ -587,17 +538,30 @@ export default {
     },
 
     play() {
-      this.wavesurfer.setOptions({ cursorColor: "black" })
-      this.settings.region.play()
+      if (this.mode === "sample") {
+        this.wavesurfer.setOptions({ cursorColor: "black" })
+        this.settings.region.play()
+        this.audioGainNode.gain.exponentialRampToValueAtTime(1, 0.02)
+      } else {
+        this.addGrain()
+        this.updateRateInterval()
+      }
       this.isPlaying = true
     },
 
     stop() {
-      this.wavesurfer.setOptions({ cursorColor: "transparent" })
-      this.wavesurfer.stop()
-      this.wavesurfer.seekTo(
-        this.timestamp2Progress(this.settings.region.start)
-      )
+      if (this.mode === "sample") {
+        this.wavesurfer.setOptions({ cursorColor: "transparent" })
+        // this.audioGainNode.gain.exponentialRampToValueAtTime(0, 0.02)
+        this.wavesurfer.stop()
+        this.wavesurfer.seekTo(
+          this.timestamp2Progress(this.settings.region.start)
+        )
+      } else {
+        // cleanup of granular
+        this.clearGranularInterval()
+        this.clearCanvas()
+      }
       this.isPlaying = false
     },
 
@@ -607,46 +571,42 @@ export default {
     },
 
     toggleMode() {
+      this.stop()
+
       this.mode = this.mode === "sample" ? "granular" : "sample"
+      console.log("mode is now", this.mode)
 
       switch (this.mode) {
         case "sample":
-          this.wavesurfer.setOptions({
-            // progressColor: "lightblack",
-            interact: "false",
-          })
+          this.wavesurfer.setOptions({ interact: true })
           break
 
         case "granular":
-          this.wavesurfer.setOptions({
-            // progressColor: "lightgray",
-            interact: "true",
-          })
+          this.wavesurfer.setOptions({ interact: false })
           break
       }
+    },
 
-      // cleanup of granular
+    clearGranularInterval() {
+      console.log(
+        "clearing granular interval",
+        this.settings.granular.params.rate.interval
+      )
       clearInterval(this.settings.granular.params.rate.interval)
-      this.clearCanvas()
-
-      this.settings.region = {
-        start: this.settings.region.start,
-        end: this.settings.region.end,
-      }
     },
 
     updateRateInterval() {
-      clearInterval(this.settings.granular.params.rate.interval)
+      this.clearGranularInterval()
       this.settings.granular.params.rate.interval = setInterval(() => {
         this.addGrain()
       }, this.invertedRate * 1000)
+      console.log("interval", this.settings.granular.params.rate.interval)
     },
 
     addGrain() {
+      console.log("adding grain...")
       // access buffer
-      window.audioNode = this.audioNode
       this.buffer = this.audioNode.buffer.getChannelData(0)
-      window.buffer = this.buffer
 
       // determine where to read the grain from
       const baseOffset = mapNumber(
@@ -672,52 +632,51 @@ export default {
         this.settings.region.start,
         this.settings.region.end
       )
+      console.log({ baseOffset, mappedStdDev, randOffset, grainOffset })
 
       // create a grain buffer
       const grain = new Tone.Player(this.audioNode.buffer)
+      grain.fadeIn = this.settings.granular.envelope.attack
+      grain.fadeOut = this.settings.granular.envelope.release
+      grain.playbackRate = this.settings.scale.params.timestretch.value
       setTimeout(() => {
-        this.settings.granular.grains.shift()
+        this.settings.granular.grains.shift() // remove the last grain created
         this.drawGrains()
       }, this.grainSize * 1000)
 
-      grain.volume.value = -6
+      grain.volume.value = -120
       window.grain = grain
+      grain.connect(this.audioGainNode)
 
       // set offsets according to envelope
       const now = Tone.context.currentTime
-      const gs = this.grainSize
-      const useEnvelope = true
-      if (!useEnvelope) {
-        // connect audio node to both effect send
-        grain.connect(this.effectSendNode)
-        // and destination
-        grain.connect(Tone.Master)
-      } else {
-        const gain = new Tone.Gain(0)
-        grain.connect(gain)
-        gain.connect(this.effectSendNode)
-        gain.connect(Tone.Master)
+      // const gs = this.grainSize
+      // const useEnvelope = true
+      // if (!useEnvelope) {
+      //   // connect audio node to both effect send
+      //   grain.connect(this.effectSendNode)
+      //   // and destination
+      //   grain.connect(Tone.Master)
+      // } else {
+      // const gain = new Tone.Gain(0)
+      // grain.connect(gain)
+      // gain.connect(this.audioGainNode)
 
-        const attackOffset = now + this.settings.granular.envelope.attack
-        const releaseOffset = Math.max(
-          gs - this.settings.granular.envelope.release,
-          this.settings.granular.envelope.release
-        )
+      // const attackOffset = now + this.settings.granular.envelope.attack
+      // const releaseOffset = Math.max(
+      //   gs - this.settings.granular.envelope.release,
+      //   this.settings.granular.envelope.release
+      // )
 
-        gain.gain.linearRampToValueAtTime(1, attackOffset)
-        gain.gain.linearRampToValueAtTime(0, releaseOffset)
-        // gain.gain.linearRampToValueAtTime(1, "+0.02")
+      // gain.gain.linearRampToValueAtTime(1, attackOffset)
+      // gain.gain.linearRampToValueAtTime(0, releaseOffset)
+      // gain.gain.linearRampToValueAtTime(1, "+0.02")
 
-        // console.log({
-        //   now,
-        //   attackOffset,
-        //   releaseOffset,
-        //   grainSize: gs,
-        // })
-      }
+      console.log({ now, grainOffset, grainSize: this.grainSize })
 
       // play grain
       grain.start(now, grainOffset, this.grainSize)
+      // grain.start(now, grainOffset)
 
       // draw grains
       const x = mapNumber(grainOffset, 0, this.bufferDuration, 0, this.width)
@@ -739,22 +698,15 @@ export default {
 
       // drawing source point
       // const r = 5
+      // this.canvasCtx.beginPath()
       // this.canvasCtx.stroke()
       // this.canvasCtx.fillStyle = "red"
       // this.canvasCtx.arc(this.x, this.height / 2, r, 0, 2 * Math.PI)
+      // this.canvasCtx.closePath()
 
       for (let i = 0; i < this.settings.granular.grains.length; i++) {
         const { x } = this.settings.granular.grains[i]
         this.canvasCtx.fillStyle = "var(--blue)"
-
-        // rect
-        // const minW = 5
-        // const w =
-        //   (this.width / this.bufferDuration) *
-        //   this.grainSize
-        // const h = 20
-        // const size = Math.max(minW, w)
-        // this.canvasCtx.fillRect(x - w / 2, this.height / 2 - h / 2, size, h)
 
         // circle
         this.canvasCtx.beginPath()
@@ -762,6 +714,26 @@ export default {
         this.canvasCtx.arc(x, this.height / 2, r, 0, 2 * Math.PI)
         // this.canvasCtx.stroke()
         this.canvasCtx.fill()
+        this.canvasCtx.closePath()
+      }
+    },
+
+    onClick() {
+      if (this.controls) return
+      console.log("click")
+      if (this.mode === "sample") {
+        if (this.wavesurfer.isPlaying()) {
+          console.log("stopping...")
+          this.stop()
+        } else {
+          this.play()
+        }
+      } else if (this.mode === "granular") {
+        if (this.settings.granular.grains.length === 0) {
+          this.play()
+        } else {
+          this.stop()
+        }
       }
     },
 
@@ -864,13 +836,12 @@ export default {
   display: flex;
   width: 100%;
   font-size: 0.9rem;
-  img {
-    pointer-events: auto; // to override the none of the parent
+  & > div {
+    pointer-events: auto;
   }
 }
 
 .grain {
-  background: red;
   width: 20px;
 }
 
@@ -895,7 +866,7 @@ export default {
   }
 }
 
-.overlay-icon {
+.sample-mode-icon {
   width: 50px;
   height: 50px;
   opacity: 0.4;
@@ -927,7 +898,7 @@ export default {
   &:hover {
     cursor: pointer;
   }
-  pointer-events: auto;
+  pointer-events: auto !important;
 }
 
 #settings-btn > img {
@@ -947,6 +918,10 @@ export default {
   &:hover {
     cursor: default !important;
   }
+}
+
+#scale-img {
+  opacity: 0.5;
 }
 
 .disabled {

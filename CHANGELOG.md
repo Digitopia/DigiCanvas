@@ -1,3 +1,7 @@
+*(CRAZY) IDEAS*
+- integrate with freesound api to query for audio samples in real time
+- allow for any effect of tone js
+
 *LATER*
 - [ ] adicionar sons
 - [ ] ui para remover sons (trash icon como botão)
@@ -14,7 +18,7 @@
 - [✔️] ui timestretch
 - [✔️] bump up UI scaling
 - [~] audio!
-  - [ ] **route audio win sample**
+  - [ ]
   - [ ] route audio in granular
 
 *MISC*
@@ -24,22 +28,24 @@
   - [✔️] diminuir area do sample (40px/sec->30) e aumentar height de buttons row (24px->34)
   - [ ] missing delay icon @Filipe
 *PLAY MODE*
-  - [~] region de loop aparece logo by default (total sample) e para modo oneshot too
-  - [~] add back and forth
+  - [✔️] region de loop aparece logo by default (total sample) e para modo oneshot too
+  - [-] add back and forth (bc negative playback rate not supported in wavesurfer)
 *EFEITOS*
   - [✔️] efeitos sempre atras de samples (zindex de sample é soberano no matter what)
   - [✔️] calcular distancia a todos os efeitos
   - [>] radiais a distancia fixa do effect center e nao crescem
 *TIMESTRETCH*
   - [✔️] fix UI
-  - [ ] não está a funcionar a nivel audio no granular
+  - [✔️] não está a funcionar a nivel audio no granular
+*AMPLITUDE*
+  - [✔️] drag, but leaving an original behind
 *GRANULAR*
-  - [ ] amplitude in grain mode too (is not connecting via the gain node)
+  - [✔️] amplitude in grain mode too (is not connecting via the gain node)
+  - [✔️] grains com ts estão a ficar desfasados em y
+  - [?] refactor to fadeIn e fadeOut? (still not fixing)
   - [ ] rate atualiza no prox interval com current value
   - [ ] stddev como 1/4 do spray
-  - [ ] grains com ts estão a ficar desfasados em y
   - [ ] curva dos sliders logarítmica, no caso do rate e grain size
-  - [ ] refactor to fadeIn e fadeOut?
 
 - conflito de UI: em modo sample, drag region vs trigger play
 - [?] ts em x e amplitude junto a play mode (oneshot ou loop)
