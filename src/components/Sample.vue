@@ -44,6 +44,11 @@
         <div
           id="scale-btn"
           ref="scaleButton"
+          style="
+            background-image: url('icons/stretch.svg');
+            /* width: 30px; */
+            /* height: 30px; */
+          "
           @click.stop="toggleControls('scale')"
         >
           <img
@@ -444,22 +449,24 @@ export default {
     },
 
     initScaleDraggable() {
-      // const deltaX = (200 - 24) / 2
       const that = this
-      const minX = -(that.originalWidth - that.minWidth)
-      const maxX = that.maxWidth - that.originalWidth
-      console.log({ minX, maxX })
-      Draggable.create(this.$refs.scaleButton, {
+      Draggable.create(this.$refs.scaleImage, {
         trigger: this.$refs.scaleImage,
-        type: "x,y",
+        type: "y",
         lockAxis: true,
         bounds: {
           // minX: -deltaX,
           // maxX: deltaX,
-          minX,
-          maxX,
           minY: 0,
           maxY: -128,
+        },
+        onDragEnd: function () {
+          gsap.to(this.target, {
+            y: 0,
+            ease: "power2.out",
+            duration: 0.2,
+          })
+          return
         },
         onDrag: function () {
           console.log("end", this.endX, this.endY)
@@ -498,6 +505,7 @@ export default {
 
     resetTimestretch() {
       this.updateTimestretch(this.originalDuration * this.pixelsPerSecond)
+      this.updateAmplitude(1)
     },
 
     initRegion() {
@@ -900,14 +908,13 @@ export default {
   pointer-events: auto !important;
 }
 
-// #scale-btn,
-// #scale-img {
-//   // background-image: url("/public/icons/stretch.svg") !important;
-//   background-color: var(--blue-light);
-//   &:hover {
-//     cursor: move !important;
-//   }
-// }
+#scale-btn {
+  background-image: url("/public/icons/stretch.svg");
+  background-color: var(--blue-light);
+  &:hover {
+    cursor: move !important;
+  }
+}
 
 .control-icon {
   // border-radius: 3px;
@@ -933,7 +940,8 @@ export default {
   border-top-right-radius: var(--border-radius);
 }
 
-#scale-img {
+#scale-img,
+#scale-btn {
   border-top-left-radius: var(--border-radius);
   border-bottom-right-radius: var(--border-radius);
   &:hover {
