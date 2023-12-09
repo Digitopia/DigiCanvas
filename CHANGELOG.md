@@ -1,104 +1,105 @@
-# v1.0 (not started, planned for 2023-12-13)
-- [ ] deploy to digitopia.casadamusica.com/<nome>
+```
+Legend
+x done
+/ started
+! blocked
+- cancelled
+? needs clarification/discussion
+> deferred
+```
+
+# v1.0 (planned for 2023-12-13)
+— [!] decidir nome
+- [!] deploy to `https://digitopia.casadamusica.com/<nome>`
 - [ ] open source do repo
-- [?] acrescentar entrada em digitopia.casadamusica.com
-- [?] GA?
+- [?] acrescentar entrada em software digitopia.casadamusica.com?
+- [?] Google Analytics?
 
-merge to main
-
-# v0.6 (ongoing, planned for 2023-12-12)
-*MISC*
-- [✔️] fix overflow scroll bars and body margins
-- [✔️] backspace delete sample under mouse
-- [ ] deploy test link
-*AX (Audio Experience)*
-- [!] pensar default samples @Filipe/Ricardo
-- [~] pensar default params of efeitos @Filipe/Ricardo
-- [~] pensar default granular params @Filipe/Ricardo
-*PLAY MODE*
-- [ ] not looping on regions full sample
-- [ ] audio click on ramping on effects params change
-*GRANULAR*
-- [✔️] fix init values of random param
-- [ ] curva dos sliders logarítmica, no caso do rate e grain size
-- [ ] stddev como 1/4 do spray
-- [ ] rate atualiza no prox interval com current value
-*EFFECTS*
-- [✔️] radiais a distancia fixa do effect center e nao crescem
-- [✔️] scale effect area from center
-- [!] missing delay icon @Filipe
-- [ ] calcular effect send à distancia do cursor do sample e não ao centro do sample
-*EXTRA*
-- [✔️] add audio files
-- [~] drag and drop audio files 😎
-- [✔️] edit name of sample (with double click on header to enter edit mode and to exit)
-- [✔️] preview icons of future features (save and micrphone input)
-
-# v0.5 (2023-12-07)
-- [✔️] ui timestretch
-- [✔️] bump up UI scaling
-- [✔️] audio!
-  - [✔️] rotear audio de wavesurfer para tonejs
-  - [✔️] fix efeitos
-  - [✔️] fix sample mode
-  - [✔️] fix granular mode
-
-*MISC*
-  - [✔️] cursorColor a preto e resto default ([bc limitacao cor waveform da lib wavesurfer](https://github.com/katspaugh/wavesurfer.js/discussions/2730))
-  - [✔️] overlay controls overlay tbm row de buttons, mas permite click toggle via clickthrough
-  - [✔️] voltar a arredondar cantos
-  - [✔️] diminuir area do sample (40px/sec->30) e aumentar height de buttons row (24px->34)
+# v0.6 (ongoing and planned for 2023-12-12) [Link](https://v0-6--digicanvas.netlify.app/)
+- *MISC*
+  - [x] fix overflow scroll bars and body margins
+  - [x] backspace delete sample under mouse
+  - [x] deploy test link (and retroactively for each tag/version)
+  - [x] small UI touches on hover (scaling 1.05 or border)
+- *AX (AUDIO EXPERIENCE)*
+  - [!] pensar default samples @Filipe/Ricardo
+  - [/] pensar default params of efeitos @Filipe/Ricardo
+  - [/] pensar default granular params @Filipe/Ricardo
+- *PLAY MODE*
+  - [ ] not looping on regions full sample
+  - [ ] audio click on ramping on effects params change
+- *GRANULAR*
+  - [x] fix init values of random param
+  - [ ] curva dos sliders logarítmica, no caso do rate e grain size
+  - [ ] stddev como 1/4 do sprayg
+  - [ ] rate atualiza no prox interval com current value
+- *EFFECTS*
+  - [x] radiais a distancia fixa do effect center e nao crescem
+  - [x] scale effect area from center
   - [!] missing delay icon @Filipe
-*SAMPLE MODE*
-  - [✔️] region de loop aparece logo by default (total sample) e para modo oneshot too
-  - [-] add back and forth (bc negative playback rate not supported in wavesurfer)
-*EFEITOS*
-  - [✔️] efeitos sempre atras de samples (zindex de sample é soberano no matter what)
-  - [✔️] calcular distancia a todos os efeitos
+  - [ ] calcular effect send à distancia do cursor do sample e não ao centro do sample
+- *EXTRA*
+  - [x] add audio files
+  - [/] drag and drop audio files 😎
+  - [x] edit name of sample (with double click on header to enter edit mode and to exit)
+  - [x] preview icons of future features (save and micrphone input)
+
+# v0.5 (2023-12-07) [Link](https://v0-5--digicanvas.netlify.app/)
+- *MISC*
+  - [x] cursorColor a preto e resto default ([bc limitacao cor waveform da lib wavesurfer](https://github.com/katspaugh/wavesurfer.js/discussions/2730))
+  - [x] overlay controls overlay tbm row de buttons, mas permite click toggle via clickthrough
+  - [x] voltar a arredondar cantos
+  - [x] diminuir area do sample (40px/sec->30) e aumentar height de buttons row (24px->34)
+  - [!] missing delay icon @Filipe
+- *SAMPLE MODE*
+  - [x] region de loop aparece logo by default (total sample) e para modo oneshot too
+  - [-] ~~add back and forth~~ (bc negative playback rate not supported in wavesurfer)
+- *EFEITOS*
+  - [x] efeitos sempre atras de samples (zindex de sample é soberano no matter what)
+  - [x] calcular distancia a todos os efeitos
   - [>] radiais a distancia fixa do effect center e nao crescem
-*TIMESTRETCH*
-  - [✔️] fix UI
-  - [✔️] não está a funcionar a nivel audio no granular
-*AMPLITUDE*
-  - [✔️] drag, but leaving an original behind
-*GRANULAR*
-  - [✔️] amplitude in grain mode too (is not connecting via the gain node)
-  - [✔️] grains com ts estão a ficar desfasados em y
-  - [✔️] atualizar origin on region drag
-  - [✔️] refactor to fadeIn e fadeOut
+- *TIMESTRETCH*
+  - [x] fix UI
+  - [x] não está a funcionar a nivel audio no granular
+- *AMPLITUDE*
+  - [x] drag, but leaving an original behind
+- *GRANULAR*
+  - [x] amplitude in grain mode too (is not connecting via the gain node)
+  - [x] grains com ts estão a ficar desfasados em y
+  - [x] atualizar origin on region drag
+  - [x] refactor to fadeIn e fadeOut
   - [ ] grains estão a ficar desfasados em y de novos samples
   - [ ] curva dos sliders logarítmica, no caso do rate e grain size
   - [ ] stddev como 1/4 do spray
   - [ ] rate atualiza no prox interval com current value
 
-# v0.4 (2023-11-17)
-
-*MISC*
-  - [✔] atualizar ícones
-*SAMPLE*
-  - [✔] interacao com cada sample faz bump do z-index
-  - [✔] quando o overlay dos settings está ligado não dá para interagir com os botões nem arrastar
-  - [✔] width dos samples em função da duração (40px = 1s)
-  - [✔] small drop shadow
-*PLAY MODE*
-  - [~] region de loop aparece logo by default (total sample) e para modo oneshot too
-  - [~] add back and forth
-*EFEITOS*
-  - [✔] smaller default reverb radius
-  - [✔] set initial position for reverb and delay in canvas
-  - [✔] garantir z-index within efeitos too
-  - [✔] faders radiais para os efeitos
-  - [✔] outro efeito: delay (FeedbackDelay em tonejs)
-  - [✔] reverb esta a ir para baixo quando se acrescentam novos sons
-*TIMESTRETCH*
-  - [✔️] parâmetros de um som estão a mexer num som diferente
-  - [✔️] depois de fazer stretch os botões deixam de funcionar
-  - [✔️] drag de scale no canto
-  - [✔️] dbclick to reset to rate=1
-  - [✔️] feedback visual do stretch através da cor
+# v0.4 (2023-11-17) [Link](https://v0-4--digicanvas.netlify.app/)
+- *MISC*
+  - [x] atualizar ícones
+- *SAMPLE*
+  - [x] interacao com cada sample faz bump do z-index
+  - [x] quando o overlay dos settings está ligado não dá para interagir com os botões nem arrastar
+  - [x] width dos samples em função da duração (40px = 1s)
+  - [x] small drop shadow
+- *PLAY MODE*
+  - [/] region de loop aparece logo by default (total sample) e para modo oneshot too
+  - [/] add back and forth
+- *EFEITOS*
+  - [x] smaller default reverb radius
+  - [x] set initial position for reverb and delay in canvas
+  - [x] garantir z-index within efeitos too
+  - [x] faders radiais para os efeitos
+  - [x] outro efeito: delay (FeedbackDelay em tonejs)
+  - [x] reverb esta a ir para baixo quando se acrescentam novos sons
+- *TIMESTRETCH*
+  - [x] parâmetros de um som estão a mexer num som diferente
+  - [x] depois de fazer stretch os botões deixam de funcionar
+  - [x] drag de scale no canto
+  - [x] dbclick to reset to rate=1
+  - [x] feedback visual do stretch através da cor
   - [ ] não está a funcionar a nivel audio no granular
   - [?] ts em x e amplitude junto a play mode (oneshot ou loop)
-*GRANULAR*
+- *GRANULAR*
   - [ ] amplitude in grain mode too (is not connecting via the gain node)
   - [ ] rate atualiza no prox interval com current value
   - [ ] stddev como 1/4 do spray
@@ -106,64 +107,60 @@ merge to main
   - [ ] curva dos sliders logarítmica, no caso do rate e grain size
   - [ ] refactor to fadeIn e fadeOut?
 
-# v0.3 (2023-10-19)
-- [✓] add new sounds
-- [✓] fixes in granular audio
-  - [✓] spray em função do tamanho do buffer (0 a 100% do buffer)
-  - [✓] source point middle for now
-  - [✓] linearRamptoTime 5ms/10ms for each grain
-  - [✓] remove bug circle left over
-  - [✓] remove UI of grain using its duration
-  - [✓] -6 volume value player e grain
-  - [✓] inverter param rate
-  - [✓] store granular spread between mode toggles
-  - [✓] drag spray region, no spray and source point always center of region
-- [✓] scale button
-  - [✓] timestretch on x
-  - [✓] amplitude on y
+# v0.3 (2023-10-19) [Link](https://v0-3--digicanvas.netlify.app/)
+- [x] add new sounds
+- [x] fixes in granular audio
+  - [x] spray em função do tamanho do buffer (0 a 100% do buffer)
+  - [x] source point middle for now
+  - [x] linearRamptoTime 5ms/10ms for each grain
+  - [x] remove bug circle left over
+  - [x] remove UI of grain using its duration
+  - [x] -6 volume value player e grain
+  - [x] inverter param rate
+  - [x] store granular spread between mode toggles
+  - [x] drag spray region, no spray and source point always center of region
+- [x] scale button
+  - [x] timestretch on x
+  - [x] amplitude on y
 - bug fixing
-  - [✓] bug: params multiple samples
-  - [✓] bug: not showing progress color in sample mode, after toggling back from granular mode
-  - [✓] bug: not playing from beginning in sample mode, after toggling back from granular mode
+  - [x] bug: params multiple samples
+  - [x] bug: not showing progress color in sample mode, after toggling back from granular mode
+  - [x] bug: not playing from beginning in sample mode, after toggling back from granular mode
 
-# v0.2c (2023-09-29)
-- [✔️] granular audio
+# v0.2c (2023-09-29) [Link](https://v0-2c--digicanvas.netlify.app/)
+- [x] granular audio
 
-# v0.2b (2023-09-05)
-- [✔️] multi samples with audio
+# v0.2b (2023-09-05) [Link](https://v0-2b--digicanvas.netlify.app/)
+- [x] multi samples with audio
 
 # v0.2a (2023-07-21)
-- [✔️] multi samples UI
+- [x] multi samples UI
 
-# v0.1 (2023-06-23)
-
-Abrir uma página em branco, com dois elementos:
-
-**SAMPLE**
-- [✔️] sempre o mesmo, para já
-- [✔️] centrado na página
-- [✔️] com a duração máxima de 10 segundos
-- [✔️] que mostre a forma de onda (waveform)
-- [✔️] e tenha uma cor automaticamente atribuída
-- [✔️] interações
-    - [✔️] tocar e parar (carregando em cima), sempre a partir do início;
-    - [✔️] arrastar ao longo do Canvas (click + drag no header);
-    - [✔️] aceder ao “i” para mudar parâmetros
-      - [✔️] One Shot
-      - [✔️] Loop
-
-**EFEITO**
-– [✔️] reverb (Freeverb of Tone.js)
-– [✔️] em forma de círculo e com uma área de acção por baixo
-  - [✔️] colorida a azul, com degradé
-  - [✔️] interações
-    - [✔️] arrastar ao longo do canvas (click and drag);
-    - [✔️] manipular 3 sliders (verticais, nesta versão), fazendo duplo clique.
-      - [✔️] sliders
-        - [✔️] dampening
-        - [✔️] alcance (aumenta/diminui o raio de acção)
-        - [✔️] decay time (room size)
-- [✔️] influenciar a quantidade de efeito de cada sample (neste momento, apenas 1).
-  - [✔️] é medida a distância do centro da janela do sample até ao centro do círculo do efeito
-  - [✔️] se a distância for maior que o raio do alcance, não há efeito.
-  - [✔️] se for menor,o envio é normalizado de 0 (distância máxima) até 1 (sobreposição dos centros).
+# v0.1 (2023-06-23) [Link](https://v0-1--digicanvas.netlify.app/)
+- *SAMPLE*
+  - [x] sempre o mesmo, para já
+  - [x] centrado na página
+  - [x] com a duração máxima de 10 segundos
+  - [x] que mostre a forma de onda (waveform)
+  - [x] e tenha uma cor automaticamente atribuída
+  - [x] interações
+      - [x] tocar e parar (carregando em cima), sempre a partir do início;
+      - [x] arrastar ao longo do Canvas (click + drag no header);
+      - [x] aceder ao “i” para mudar parâmetros
+        - [x] One Shot
+        - [x] Loop
+- *EFEITO*
+  – [x] reverb (Freeverb of Tone.js)
+  – [x] em forma de círculo e com uma área de acção por baixo
+    - [x] colorida a azul, com degradé
+    - [x] interações
+      - [x] arrastar ao longo do canvas (click and drag);
+      - [x] manipular 3 sliders (verticais, nesta versão), fazendo duplo clique.
+        - [x] sliders
+          - [x] dampening
+          - [x] alcance (aumenta/diminui o raio de acção)
+          - [x] decay time (room size)
+  - [x] influenciar a quantidade de efeito de cada sample (neste momento, apenas 1).
+    - [x] é medida a distância do centro da janela do sample até ao centro do círculo do efeito
+    - [x] se a distância for maior que o raio do alcance, não há efeito.
+    - [x] se for menor,o envio é normalizado de 0 (distância máxima) até 1 (sobreposição dos centros).
