@@ -1,6 +1,7 @@
 <template>
   <div id="app" class="no-select">
-    <div id="add-button" @click="addSound">➕</div>
+    <div id="add-button" @click="addSound"></div>
+    <div id="record-button" @click="record"></div>
     <Sample
       v-for="(sample, idx) in samples"
       :key="idx"
@@ -8,7 +9,8 @@
       :audio="sample.audio"
       :idx="idx"
     />
-    <Reverb />
+    <Delay style="bottom: 50px; left: 280px" />
+    <Reverb style="bottom: 50px; left: 30px" />
   </div>
 </template>
 
@@ -17,6 +19,7 @@ import Tone from "tone"
 
 import Sample from "@/components/Sample"
 import Reverb from "@/components/Reverb"
+import Delay from "@/components/Delay"
 
 export default {
   name: "App",
@@ -24,6 +27,7 @@ export default {
   components: {
     Sample,
     Reverb,
+    Delay,
   },
 
   data() {
@@ -76,15 +80,8 @@ export default {
   },
 
   mounted() {
-    this.samples.push(this.presets[1]) // 1-based as it's a dict with key referring to keyboard key
+    this.samples.push(this.presets[0])
     // this.samples = this.preset
-
-    // unselect controls
-    document.body.onclick = () => {
-      console.log("clicked body")
-      // any click in body, unselects the controls
-      this.$root.$emit("toggleControls")
-    }
 
     // quick entry of presets with keyboard (1, 2, 3, 4)
     document.addEventListener("keypress", (event) => {
@@ -109,7 +106,13 @@ export default {
 
   methods: {
     addSound() {
-      console.log("adding sound TODO")
+      // TODO:
+      console.log("adding sound...")
+    },
+
+    record() {
+      // TODO:
+      console.log("recording...")
     },
   },
 }
@@ -147,16 +150,29 @@ body {
 }
 
 #add-button {
-  position: absolute;
   bottom: 20px;
   right: 20px;
-  background-color: var(--blue);
+  background-image: url("/public/icons/add.svg");
+}
+
+#record-button {
+  bottom: 20px;
+  right: 80px;
+  background-image: url("/public/icons/record.svg");
+}
+
+#add-button,
+#record-button {
   border-radius: 50%;
   width: 50px;
   height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.5;
+  opacity: 0.2;
+  position: absolute;
+  &:hover {
+    cursor: not-allowed;
+  }
 }
 </style>

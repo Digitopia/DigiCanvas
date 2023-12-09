@@ -17,3 +17,27 @@ export function randomGaussian(mean = 0, stdev = 1) {
   // Transform to the desired mean and standard deviation:
   return z * stdev + mean
 }
+
+// taken from p5.js (with help from ChatGPT, so here be dragons)
+export function lerpColor(c1, c2, amt) {
+  let r1, g1, b1, a1
+  let r2, g2, b2, a2
+  let r3, g3, b3, a3
+
+  r1 = c1[0]
+  g1 = c1[1]
+  b1 = c1[2]
+  a1 = c1[3]
+
+  r2 = c2[0]
+  g2 = c2[1]
+  b2 = c2[2]
+  a2 = c2[3]
+
+  r3 = r1 + (r2 - r1) * amt
+  g3 = g1 + (g2 - g1) * amt
+  b3 = b1 + (b2 - b1) * amt
+  a3 = a1 + (a2 - a1) * amt
+
+  return [r3, g3, b3, a3]
+}

@@ -1,3 +1,58 @@
+# v0.4 (2023-11-17)
+
+*MISC*
+  - [✔] atualizar ícones
+*SAMPLE*
+  - [✔] interacao com cada sample faz bump do z-index
+  - [✔] quando o overlay dos settings está ligado não dá para interagir com os botões nem arrastar
+  - [✔] width dos samples em função da duração (40px = 1s)
+  - [✔] small drop shadow
+*PLAY MODE*
+  - [~] region de loop aparece logo by default (total sample) e para modo oneshot too
+  - [~] add back and forth
+*EFEITOS*
+  - [✔] smaller default reverb radius
+  - [✔] set initial position for reverb and delay in canvas
+  - [✔] garantir z-index within efeitos too
+  - [✔] faders radiais para os efeitos
+  - [✔] outro efeito: delay (FeedbackDelay em tonejs)
+  - [✔] reverb esta a ir para baixo quando se acrescentam novos sons
+*TIMESTRETCH*
+  - [✔️] parâmetros de um som estão a mexer num som diferente
+  - [✔️] depois de fazer stretch os botões deixam de funcionar
+  - [✔️] drag de scale no canto
+  - [✔️] dbclick to reset to rate=1
+  - [✔️] feedback visual do stretch através da cor
+  - [ ] não está a funcionar a nivel audio no granular
+  - [?] ts em x e amplitude junto a play mode (oneshot ou loop)
+*GRANULAR*
+  - [ ] amplitude in grain mode too (is not connecting via the gain node)
+  - [ ] rate atualiza no prox interval com current value
+  - [ ] stddev como 1/4 do spray
+  - [ ] grains com ts estão a ficar desfasados em y
+  - [ ] curva dos sliders logarítmica, no caso do rate e grain size
+  - [ ] refactor to fadeIn e fadeOut?
+*LATER*
+  - [ ] adicionar sons
+  - [ ] ui para remover sons
+  - [ ] faders radiais com raio ligeiramente maior que o efeito
+  - [ ] scale efeitos from center
+  - [ ] não parar de tocar enquanto se muda o rate
+  - [ ] filtro low e high pass (também no modo granular?)
+  - [ ] gravar
+  - [ ] edit name of sample
+  - [ ] "ts em x e amplitude junto a play mode (oneshot ou loop)"
+*REUNIÂO*
+- favicon
+- missing delay icon
+- names of filename without accents and spaces
+- conflito de UI: em modo sample, drag region vs trigger play
+- quando UI muito reduzida em X sample modes ficam uns em cima dos outros
+- limitacao cor waveform da lib wavesurfer
+- ui para remover sons
+
+---
+
 # v0.3 (2023-10-19)
 - [✓] add new sounds
 - [✓] fixes in granular audio
