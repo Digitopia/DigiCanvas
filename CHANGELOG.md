@@ -1,3 +1,76 @@
+# v1.0 (not started, planned for 2023-12-13)
+- [ ] deploy to digitopia.casadamusica.com/<nome>
+- [ ] open source do repo
+- [?] acrescentar entrada em digitopia.casadamusica.com
+- [?] GA?
+
+merge to main
+
+# v0.6 (ongoing, planned for 2023-12-12)
+*MISC*
+- [✔️] fix overflow scroll bars and body margins
+- [✔️] backspace delete sample under mouse
+- [ ] deploy test link
+*AX (Audio Experience)*
+- [!] pensar default samples @Filipe/Ricardo
+- [~] pensar default params of efeitos @Filipe/Ricardo
+- [~] pensar default granular params @Filipe/Ricardo
+*PLAY MODE*
+- [ ] not looping on regions full sample
+- [ ] audio click on ramping on effects params change
+*GRANULAR*
+- [✔️] fix init values of random param
+- [ ] curva dos sliders logarítmica, no caso do rate e grain size
+- [ ] stddev como 1/4 do spray
+- [ ] rate atualiza no prox interval com current value
+*EFFECTS*
+- [✔️] radiais a distancia fixa do effect center e nao crescem
+- [✔️] scale effect area from center
+- [!] missing delay icon @Filipe
+- [ ] calcular effect send à distancia do cursor do sample e não ao centro do sample
+*EXTRA*
+- [✔️] add audio files
+- [~] drag and drop audio files 😎
+- [✔️] edit name of sample (with double click on header to enter edit mode and to exit)
+- [✔️] preview icons of future features (save and micrphone input)
+
+# v0.5 (2023-12-07)
+- [✔️] ui timestretch
+- [✔️] bump up UI scaling
+- [✔️] audio!
+  - [✔️] rotear audio de wavesurfer para tonejs
+  - [✔️] fix efeitos
+  - [✔️] fix sample mode
+  - [✔️] fix granular mode
+
+*MISC*
+  - [✔️] cursorColor a preto e resto default ([bc limitacao cor waveform da lib wavesurfer](https://github.com/katspaugh/wavesurfer.js/discussions/2730))
+  - [✔️] overlay controls overlay tbm row de buttons, mas permite click toggle via clickthrough
+  - [✔️] voltar a arredondar cantos
+  - [✔️] diminuir area do sample (40px/sec->30) e aumentar height de buttons row (24px->34)
+  - [!] missing delay icon @Filipe
+*SAMPLE MODE*
+  - [✔️] region de loop aparece logo by default (total sample) e para modo oneshot too
+  - [-] add back and forth (bc negative playback rate not supported in wavesurfer)
+*EFEITOS*
+  - [✔️] efeitos sempre atras de samples (zindex de sample é soberano no matter what)
+  - [✔️] calcular distancia a todos os efeitos
+  - [>] radiais a distancia fixa do effect center e nao crescem
+*TIMESTRETCH*
+  - [✔️] fix UI
+  - [✔️] não está a funcionar a nivel audio no granular
+*AMPLITUDE*
+  - [✔️] drag, but leaving an original behind
+*GRANULAR*
+  - [✔️] amplitude in grain mode too (is not connecting via the gain node)
+  - [✔️] grains com ts estão a ficar desfasados em y
+  - [✔️] atualizar origin on region drag
+  - [✔️] refactor to fadeIn e fadeOut
+  - [ ] grains estão a ficar desfasados em y de novos samples
+  - [ ] curva dos sliders logarítmica, no caso do rate e grain size
+  - [ ] stddev como 1/4 do spray
+  - [ ] rate atualiza no prox interval com current value
+
 # v0.4 (2023-11-17)
 
 *MISC*
@@ -32,26 +105,6 @@
   - [ ] grains com ts estão a ficar desfasados em y
   - [ ] curva dos sliders logarítmica, no caso do rate e grain size
   - [ ] refactor to fadeIn e fadeOut?
-*LATER*
-  - [ ] adicionar sons
-  - [ ] ui para remover sons
-  - [ ] faders radiais com raio ligeiramente maior que o efeito
-  - [ ] scale efeitos from center
-  - [ ] não parar de tocar enquanto se muda o rate
-  - [ ] filtro low e high pass (também no modo granular?)
-  - [ ] gravar
-  - [ ] edit name of sample
-  - [ ] "ts em x e amplitude junto a play mode (oneshot ou loop)"
-*REUNIÂO*
-- favicon
-- missing delay icon
-- names of filename without accents and spaces
-- conflito de UI: em modo sample, drag region vs trigger play
-- quando UI muito reduzida em X sample modes ficam uns em cima dos outros
-- limitacao cor waveform da lib wavesurfer
-- ui para remover sons
-
----
 
 # v0.3 (2023-10-19)
 - [✓] add new sounds

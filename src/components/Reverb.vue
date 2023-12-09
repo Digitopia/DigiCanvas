@@ -49,7 +49,9 @@ export default {
       this.params.decay.value,
       this.params.dampening.value
     ).toMaster()
-    this.$root.reverbNode = this.reverbNode
+    console.log("created reverb node")
+    if (!this.$root.effectNodes) this.$root.effectNodes = []
+    this.$root.effectNodes["reverb"] = this.reverbNode
   },
 }
 </script>
