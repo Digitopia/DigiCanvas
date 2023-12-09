@@ -1,17 +1,53 @@
 <template>
-  <div id="app" class="no-select">
-    <div id="add-button" @click="addSound"></div>
-    <div id="record-button" @click="record"></div>
-    <Sample
-      v-for="(sample, idx) in samples"
-      :key="idx"
-      :name="sample.name"
-      :audio="sample.audio"
-      :idx="idx"
-      @mouseover.native="updateLastSampleInteractionIdx(idx)"
+  <div id="app" class="no-select" @dragover.prevent @drop.prevent="handleDrop">
+    <img
+      id="add-button"
+      class="app-button scale-hover"
+      src="/icons/add.svg"
+      style="right: 20px"
+      @click="addSound"
     />
+    <img
+      id="save-button"
+      class="app-button disabled"
+      src="/icons/save.svg"
+      style="right: 80px"
+      @click="save"
+    />
+    <img
+      id="record-button"
+      class="app-button disabled"
+      src="/icons/record.svg"
+      style="right: 140px"
+      @click="record"
+    />
+    <img
+      id="mic-button"
+      class="app-button disabled"
+      src="/icons/mic.svg"
+      style="right: 200px"
+      @click="microphone"
+    />
+    <template v-for="(sample, idx) in samples">
+      <Sample
+        :ref="`sample-${idx}`"
+        :key="idx"
+        :name="sample.name"
+        :audio="sample.audio"
+        :idx="idx"
+        @mouseover.native="$root.lastSampleInteractionIdx = idx"
+      />
+    </template>
     <Reverb ref="reverb" style="bottom: 50px; left: 30px" />
     <Delay ref="delay" style="bottom: 50px; left: 280px" />
+    <input
+      id="hiddenFileInput"
+      ref="fileChooser"
+      type="file"
+      style="display: none"
+      accept=".mp3"
+      @change="handleAddSound"
+    />
   </div>
 </template>
 
@@ -21,6 +57,8 @@ import Tone from "tone"
 import Sample from "@/components/Sample"
 import Reverb from "@/components/Reverb"
 import Delay from "@/components/Delay"
+
+import { randomInt } from "@/utils"
 
 export default {
   name: "App",
@@ -34,7 +72,6 @@ export default {
   data() {
     return {
       samples: [],
-      lastSampleInteractionIdx: null,
       presets: {
         0: {
           audio: "presets/guit_plus_background.mp3",
@@ -81,11 +118,14 @@ export default {
   },
 
   mounted() {
-    this.samples.push(this.presets[0])
+    // this.samples.push(this.presets[0])
+    this.samples.push(
+      this.presets[randomInt(0, Object.keys(this.presets).length - 1)]
+    )
     // this.samples = this.preset
 
     // quick entry of presets with keyboard (1, 2, 3, 4)
-    document.addEventListener("keypress", (event) => {
+    document.addEventListener("keydown", (event) => {
       if (
         event.key == 0 ||
         event.key == 1 ||
@@ -100,10 +140,6 @@ export default {
       ) {
         this.samples.push(this.presets[event.key])
       }
-      if (event.key === "Backspace") {
-        this.$destroy() // destroy the vue listeners, etc
-        this.$el.parentNode.removeChild(this.$el) // remove the element from the DOM
-      }
     })
 
     window.Tone = Tone
@@ -111,17 +147,51 @@ export default {
 
   methods: {
     addSound() {
-      // TODO:
       console.log("adding sound...")
+      this.$refs.fileChooser.click()
+    },
+
+    handleAddSound(event) {
+      const file = event.target.files[0]
+      console.log("Selected file:", file)
+      this.initSample(file)
     },
 
     record() {
-      // TODO:
       console.log("recording...")
     },
 
-    updateLastSampleInteractionIdx(idx) {
-      console.log("idx", idx)
+    save() {
+      console.log("saving...")
+    },
+
+    microphone() {
+      console.log("microphoning...")
+    },
+
+    handleDrop(event) {
+      console.log("handling drop")
+      const file = event.dataTransfer.files[0]
+      if (file && file.type.startsWith("audio/")) {
+        this.initSample(file)
+      } else {
+        alert("Please drop a valid audio file.")
+      }
+    },
+
+    initSample(file) {
+      // Load the dropped audio file
+      const reader = new FileReader()
+      reader.onload = () => {
+        const blob = new Blob([reader.result], { type: file.type })
+        const blobUrl = URL.createObjectURL(blob)
+        window.blob = blob
+        this.samples.push({
+          audio: blobUrl,
+          name: file.name.replace(/\.[^/.]+$/, ""),
+        })
+      }
+      reader.readAsArrayBuffer(file)
     },
   },
 }
@@ -142,6 +212,16 @@ body {
   background: var(--yellow);
   width: 100%;
   height: 100%;
+  overflow: hidden;
+  margin: 0;
+}
+
+.scale-hover {
+  transition: all 0.05s;
+  &:hover {
+    transform: scale(1.05);
+    cursor: pointer !important;
+  }
 }
 
 #app {
@@ -151,6 +231,7 @@ body {
   text-align: center;
   color: #2c3e50;
   width: 100%;
+  min-height: 100vh;
 }
 
 .no-select {
@@ -159,30 +240,23 @@ body {
   user-select: none; /* Standard syntax */
 }
 
-#add-button {
+.app-button {
   bottom: 20px;
-  right: 20px;
-  background-image: url("/public/icons/add.svg");
-}
-
-#record-button {
-  bottom: 20px;
-  right: 80px;
-  background-image: url("/public/icons/record.svg");
-}
-
-#add-button,
-#record-button {
   border-radius: 50%;
   width: 50px;
   height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.2;
   position: absolute;
   &:hover {
-    cursor: not-allowed;
+    cursor: pointer;
+  }
+  &.disabled {
+    opacity: 0.2;
+    &:hover {
+      cursor: not-allowed !important;
+    }
   }
 }
 </style>

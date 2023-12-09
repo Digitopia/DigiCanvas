@@ -2,7 +2,7 @@
   <Effect
     :params="params"
     :effect-node="delayNode"
-    icon="icons/granular.svg"
+    icon="icons/delay.svg"
     name="delay"
   ></Effect>
 </template>
@@ -34,7 +34,7 @@ export default {
           min: 0,
           max: 1,
           step: 0.01,
-          value: 0.2,
+          value: 0.5,
           handler: (val) => {
             console.log("feedback is now", val)
             this.delayNode.feedback.value = val

@@ -22,19 +22,19 @@ export default {
       params: {
         dampening: {
           min: 0,
-          max: 10000,
-          step: 10,
-          value: 3000,
+          max: 20000,
+          step: 100,
+          value: 8000,
           handler: (val) => {
             console.log("dampening is now", val)
             this.reverbNode.dampening.value = val
           },
         },
         decay: {
-          min: 0,
+          min: 0.15,
           max: 1,
           step: 0.01,
-          value: 0.2,
+          value: 0.5,
           handler: (val) => {
             console.log("decay/roomsize is now", val)
             this.reverbNode.roomSize.value = val

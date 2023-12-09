@@ -1,5 +1,12 @@
 <template>
-  <div ref="area" class="effect-area">
+  <div ref="effect" class="effect">
+    <div ref="effectArea" class="effect-area"></div>
+    <div
+      ref="effectCenter"
+      class="effect-center"
+      :style="{ backgroundImage: `url('${icon}')` }"
+      @dblclick.stop="showSliders = !showSliders"
+    ></div>
     <div v-show="showSliders" class="sliders">
       <round-slider
         v-for="(param, paramName, idx) in params"
@@ -13,11 +20,11 @@
         "
         :end-angle="`+${sliderArcAngle}`"
         line-cap="round"
-        width="12"
+        width="8"
         path-color="rgba(255,255,255,0.4)"
         range-color="var(--blue)"
         :animation="false"
-        :radius="rangeRadius"
+        radius="50"
         :show-tooltip="false"
         :keyboard-action="false"
         :min="param.min"
@@ -28,12 +35,6 @@
         :update="handleParamChange"
       />
     </div>
-    <div
-      ref="center"
-      class="effect-center"
-      :style="{ backgroundImage: `url('${icon}')` }"
-      @dblclick.stop="showSliders = !showSliders"
-    ></div>
   </div>
 </template>
 
@@ -42,6 +43,7 @@ import RoundSlider from "vue-round-slider"
 import Draggable from "gsap/Draggable"
 
 import gsap from "gsap"
+import { mapNumber } from "@/utils"
 
 gsap.registerPlugin(Draggable)
 
@@ -71,7 +73,7 @@ export default {
     return {
       effectNode: null,
       showSliders: false,
-      sliderArcAngle: 110,
+      sliderArcAngle: 90,
       rangeRadius: null, // need a specific var so that <round-slider> auto changes
     }
   },
@@ -91,17 +93,21 @@ export default {
   created() {
     // eslint-disable-next-line vue/no-mutating-props
     this.params.range = {
-      min: 50,
-      max: 200,
+      min: 40,
+      max: 150,
       step: 1,
-      value: 100,
+      value: 50,
       handler: (val) => {
         console.log("handler", val)
-        this.rangeRadius = val
-        this.$refs.area.style.width = `${val * 2}px`
-        this.$refs.area.style.height = `${val * 2}px`
-        // TODO: need to update in the root too
-        // this.$root.reverbRadius = this.effectRadius
+        // this.rangeRadius = val
+        // changing width/height
+        // this.$refs.area.style.width = `${val * 2}px`
+        // this.$refs.area.style.height = `${val * 2}px`
+        const { min, max } = this.params.range
+        console.log(min, max)
+        const scale = mapNumber(val, min, max, 1, max / min)
+        console.log({ scale })
+        this.$refs.effectArea.style.transform = `scale(${scale})`
       },
     }
 
@@ -114,11 +120,10 @@ export default {
 
   methods: {
     initDraggable() {
-      Draggable.create(this.$refs.area, {
-        trigger: this.$refs.center,
+      Draggable.create(this.$refs.effect, {
+        trigger: this.$refs.effectCenter,
         type: "x,y",
         bounds: "html",
-        inertia: true,
         zIndexBoost: false,
         onDragStart: () => {
           // simulate zIndexBoost, but only within effects
@@ -126,7 +131,7 @@ export default {
           const highest = Math.max(
             ...Array.from(areas).map((area) => parseInt(area.style.zIndex))
           )
-          this.$refs.area.style.zIndex = highest + 1
+          this.$refs.effectArea.style.zIndex = highest + 1
         },
         onDrag: () => {
           // this.$root.$emit("effectDrag", {
@@ -140,6 +145,8 @@ export default {
     },
 
     handleParamChange(roundSliderEvt) {
+      console.log("handleParamChange!")
+      console.log("handleParamChange!")
       const paramName = roundSliderEvt.id
       const val = roundSliderEvt.value
       console.log(paramName, val)
@@ -150,6 +157,12 @@ export default {
 </script>
 
 <style lang="scss">
+.effect {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+}
+
 .effect-area {
   position: absolute;
   width: 200px;
@@ -168,13 +181,20 @@ export default {
   height: 50px;
   border-radius: 100%;
   pointer-events: auto; // to override the none of the parent
+  &:hover {
+    border: 1px solid black;
+  }
+  z-index: 1000;
 }
 
 .sliders {
-  position: absolute !important;
-  top: 0;
-  pointer-events: auto; // to override the none of the parent
-  width: 100%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-100%, -100%);
+  width: 50px;
+  height: 50px;
+  pointer-events: auto !important; // to override the none of the parent
 }
 
 .rs-handle {

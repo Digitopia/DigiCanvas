@@ -25,10 +25,23 @@
           <div :id="`random-${idx}`">Rd</div>
         </div>
       </div>
-      <div ref="header" class="header">{{ name }}</div>
-      <div id="waveform-wrapper">
+      <div ref="header" class="header scale-hover" @dblclick="toggleEditName">
+        <template v-if="!isEditingName">
+          {{ name }}
+        </template>
+        <template v-else>
+          <input
+            v-model="editName"
+            type="text"
+            maxlength="20"
+            style="text-align: center"
+            @keypress.enter="toggleEditName"
+          />
+        </template>
+      </div>
+      <div id="waveform-wrapper" ref="waveformWrapper">
         <div ref="waveform" :class="`waveform-${idx}`"></div>
-        <canvas id="canvas" ref="canvas"></canvas>
+        <canvas ref="canvas" class="canvas"></canvas>
       </div>
       <div id="buttons">
         <div
@@ -72,10 +85,10 @@ import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.esm.js"
 import Draggable from "gsap/Draggable"
 import Nexus from "nexusui"
 import Tone from "tone"
-// eslint-disable-next-line no-unused-vars
 import gsap from "gsap"
 
-import { mapNumber, randomGaussian, clamp, lerpColor } from "@/utils"
+// eslint-disable-next-line no-unused-vars
+import { mapNumber, randomGaussian, randomInt, clamp, lerpColor } from "@/utils"
 
 export default {
   props: {
@@ -95,23 +108,23 @@ export default {
 
   data() {
     return {
+      isEditingName: false,
+      editName: null,
       audioNode: null, // to be used as source of the grains
       audioElementSource: null, // to be used to route the audio from waveform into the Tone.js
       wavesurfer: null,
       controls: "", // other options: 'settings', 'granular' (ui)
-      mode: "granular", // or 'granular'
+      mode: "sample", // or 'granular'
       settings: {
         sample: {
-          // modes: ["one-shot", "back-and-forth", "loop"],
           modes: ["one-shot", "loop"],
-          // mode: "one-shot",
           mode: "loop",
         },
         granular: {
           origin: 0.5, // this is stored in [0, 1] range of the progress of the sample (start at middle)
           params: {
             grainSize: {
-              min: 0.2,
+              min: 0.1,
               max: 1.5,
               value: 0.2,
             },
@@ -119,13 +132,13 @@ export default {
               // how often a new grain is produced [100ms, 2000ms]
               min: 0.1,
               max: 2,
-              value: 1,
+              value: 2, // NOTE: since nexus-ui doesn't support inverted sliders (min > max), for better UX these values later get inverted
             },
             random: {
               // how random (0 is at center, 1 is almost linearly, but still follows normal distribution)
-              min: 0.0,
-              max: 1.0,
-              value: 0,
+              min: 0,
+              max: 1,
+              value: 0.8,
             },
           },
           sliders: {},
@@ -143,8 +156,7 @@ export default {
               value: 1,
             },
             timestretch: {
-              min: mapNumber(100, 200 * 0.1, 200 * 2, 0.1, 2),
-              max: 2,
+              // min and max are given by minWidth and maxWidth
               value: 1,
             },
           },
@@ -220,6 +232,8 @@ export default {
     window.region = this.settings.region
     window.settings = this.settings
 
+    this.editName = this.name
+
     this.initWaveform()
     this.initAudio()
     this.initGranularSliders()
@@ -231,14 +245,48 @@ export default {
     this.$root.$on("toggleControls", this.toggleControls)
     this.$root.$on("effectDrag", this.effectDrag)
 
-    setTimeout(() => {
-      this.resize()
-    }, 1000)
+    document.addEventListener("keydown", (event) => {
+      if (
+        event.key === "Backspace" &&
+        this.$root.lastSampleInteractionIdx === this.idx &&
+        !this.isEditingName
+      ) {
+        this.$destroy()
+      }
+    })
+
+    gsap.to(this.$refs.container, { opacity: 1, duration: 2 })
+
+    // gsap.to(this.$refs.container, {
+    //   x: randomInt(0, window.innerWidth - this.width * 1.2),
+    //   y: randomInt(0, window.innerHeight - this.height * 1.2),
+    //   ease: "power2.out",
+    //   duration: 1.2,
+    // })
 
     window.grains = this.settings.granular.grains
   },
 
+  beforeDestroy() {
+    console.log("this is going to be destroyed")
+    this.resizeObserver.unobserve(this.$refs.container)
+    this.$root.$off("toggleCofftrols", this.toggleControls)
+    this.$root.$off("effectDrag", this.effectDrag)
+    this.$el.parentNode.removeChild(this.$el)
+  },
+
   methods: {
+    toggleEditName() {
+      this.isEditingName = !this.isEditingName
+      if (this.isEditingName) {
+        this.draggable.disable()
+      } else {
+        // eslint-disable-next-line vue/no-mutating-props
+        this.name = this.editName
+        this.draggable.enable()
+      }
+    },
+
     progress2Timestamp(progress) {
       return mapNumber(progress, 0, 1, 0, this.bufferDuration)
     },
@@ -253,7 +301,7 @@ export default {
         backgroundColor: "white",
         waveColor: "lightgray",
         progressColor: "lightgray",
-        cursorColor: "black", // start black, should change to black
+        cursorColor: "black",
         cursorWidth: 1,
         barWidth: 2,
         barHeight: 1, // goes from [0.1 to 4]
@@ -273,26 +321,26 @@ export default {
           wavesurfer.media
         )
         Tone.connect(this.audioElementSource, this.audioGainNode)
+
+        this.resize()
+        // const initX = randomInt(0, window.innerWidth - this.width * 1.2)
+        // const initY = randomInt(0, window.innerHeight - this.height * 1.2)
+        const initX = window.innerWidth / 2 - this.width / 2
+        const initY = window.innerHeight / 2 - this.height / 2
+        gsap.to(this.$refs.container, {
+          x: initX,
+          y: initY,
+          ease: "power2.out",
+          duration: 0,
+        })
       })
-
-      // wavesurfer.on("interaction", () => {
-      //   console.log("interaction event")
-      // })
-
-      // wavesurfer.on("play", () => {
-      //   console.log("play event")
-      // })
-
-      // wavesurfer.on("pause", () => {
-      //   console.log("pause event")
-      // })
 
       this.wavesurfer = wavesurfer
       this.$refs.waveform.addEventListener("click", this.onClick)
 
       wavesurfer.load(this.audio)
 
-      Draggable.create(this.$refs.container, {
+      this.draggable = Draggable.create(this.$refs.container, {
         trigger: this.$refs.header,
         type: "x,y",
         bounds: "html",
@@ -301,12 +349,13 @@ export default {
           this.$root.$emit("effectDrag", this.$parent.$refs.reverb.$children[0])
           this.$root.$emit("effectDrag", this.$parent.$refs.delay.$children[0])
         },
-      })
+      })[0]
 
       window.wavesurfer = wavesurfer
     },
 
     initAudio() {
+      console.log("init audio")
       // init audio node
       this.audioNode = new Tone.Player(this.audio, () => {
         console.log("loaded audio", this.audio)
@@ -325,6 +374,7 @@ export default {
           this.stop() // to avoid UI jump at play
         }, 200) // TODO: requiring timeout
       })
+
       this.audioNode.volume.value = -6
       window.audioNode = this.audioNode
 
@@ -348,7 +398,7 @@ export default {
     initGranularSliders() {
       const opts = {
         size: [20, 80],
-        mode: "relative", // 'relative' or 'absolute'
+        mode: "relative",
       }
 
       // grain size
@@ -379,7 +429,7 @@ export default {
       // random
       const randomSlider = new Nexus.Slider(`#random-${this.idx}`, {
         ...opts,
-        ...this.settings.granular.params.randomSlider,
+        ...this.settings.granular.params.random,
       })
       this.settings.granular.sliders.rate = randomSlider
       randomSlider.on("change", (val) => {
@@ -454,6 +504,9 @@ export default {
           })
           return
         },
+        onDragStart: () => {
+          gsap.set(this.$refs.scaleImage, { cursor: "grabbing" })
+        },
         onDrag: function () {
           console.log("end", this.endX, this.endY)
           if (this.lockedAxis === "x") {
@@ -480,6 +533,7 @@ export default {
       })
 
       resizeObserver.observe(this.$refs.container)
+      this.resizeObserver = resizeObserver // so that later can unobserve before destroy
     },
 
     resetTimestretch() {
@@ -489,8 +543,8 @@ export default {
 
     initRegion() {
       console.log("initting region...")
-      const start = this.progress2Timestamp(0.4)
-      const end = this.progress2Timestamp(0.6)
+      const start = this.progress2Timestamp(0.1)
+      const end = this.progress2Timestamp(0.9)
       this.settings.region = this.regionsPlugin.addRegion({
         start,
         end,
@@ -530,13 +584,13 @@ export default {
 
     resize() {
       console.log("resizing...")
-      this.width = document.querySelector("#waveform-wrapper").clientWidth
-      this.height = document.querySelector("#waveform-wrapper").clientHeight
+      this.width = this.$refs.waveformWrapper.clientWidth
+      this.height = this.$refs.waveformWrapper.clientHeight
       console.log({ height: this.height })
       console.log(this.width, this.height)
       this.canvas.setAttribute("width", this.width)
       this.canvas.setAttribute("height", this.height)
-      // this.wavesurfer.setHeight(this.height)
+      this.wavesurfer.setOptions({ height: this.height })
     },
 
     play() {
@@ -600,6 +654,7 @@ export default {
 
     updateRateInterval() {
       this.clearGranularInterval()
+      console.log("INVERTED RATE", this.invertedRate * 1000)
       this.settings.granular.params.rate.interval = setInterval(() => {
         this.addGrain()
       }, this.invertedRate * 1000)
@@ -746,13 +801,11 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 #waveform {
   position: relative;
   width: 100%;
   height: 100%;
-  // border-bottom-left-radius: var(--border-radius);
-  // border-bottom-right-radius: var(--border-radius);
 }
 
 .header {
@@ -764,6 +817,10 @@ export default {
   width: 100%;
   border-top-left-radius: var(--border-radius);
   border-top-right-radius: var(--border-radius);
+  border: 1px solid var(--blue);
+  &:hover {
+    cursor: grab !important;
+  }
 }
 
 #buttons {
@@ -789,14 +846,10 @@ export default {
 }
 
 .container {
-  position: relative;
+  position: absolute;
   width: 200px;
   margin: 0 auto;
   border-radius: var(--border-radius);
-  // border-top-right-radius: var(--border-radius);
-  // border-top-left-radius: var(--border-radius);
-  // border-bottom-left-radius: 3px;
-  // border-bottom-right-radius: 3px;
   background: rgb(255, 255, 255);
   &.playing {
     background: var(--blue-light) !important;
@@ -804,6 +857,7 @@ export default {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   resize: horizontal;
   overflow: hidden;
+  opacity: 0;
 }
 
 .spaced-out {
@@ -821,6 +875,7 @@ export default {
   & > div {
     pointer-events: auto;
   }
+  margin-top: -30px; // so that don't get so much on top of bottom row buttons
 }
 
 .grain {
@@ -830,17 +885,18 @@ export default {
 #waveform-wrapper {
   position: relative;
   #waveform,
-  #canvas {
+  .canvas {
     border-radius: calc(var(--border-radius) / 2);
   }
 
-  #canvas {
+  .canvas {
     position: absolute;
     top: 0;
     left: 0;
     bottom: 0;
-    width: 100%;
+    width: 100% !important;
     z-index: 0;
+    height: 128px;
   }
 
   #waveform {
@@ -864,22 +920,29 @@ export default {
 #scale-btn {
   background-image: url("/public/icons/stretch.svg");
   background-color: var(--blue-light);
-  &:hover {
+  &:-moz-drag-over {
     cursor: move !important;
+  }
+  &:hover {
+    // cursor: move !important;
+  }
+}
+
+.control-icon,
+.sample-mode-icon,
+#scale-btn {
+  transition: all 0.05s;
+  &:hover {
+    transform: scale(1.05);
+    cursor: pointer !important;
   }
 }
 
 .control-icon {
-  // border-radius: 3px;
   padding: 2px;
   background-color: var(--blue-light);
-  // width: calc(var(--buttons-height) * 0.9);
-  // height: calc(var(--buttons-height) * 0.9);
   width: 30px;
   height: 30px;
-  &:hover {
-    cursor: pointer;
-  }
   pointer-events: auto !important;
 }
 
@@ -898,12 +961,12 @@ export default {
   border-top-left-radius: var(--border-radius);
   border-bottom-right-radius: var(--border-radius);
   &:hover {
-    cursor: default !important;
+    cursor: n-resize !important;
   }
 }
 
 #scale-img {
-  opacity: 0.5;
+  opacity: 0.15;
 }
 
 .disabled {
