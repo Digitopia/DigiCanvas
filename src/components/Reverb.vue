@@ -27,7 +27,7 @@ export default {
           value: 8000,
           handler: (val) => {
             console.log("dampening is now", val)
-            this.reverbNode.dampening.value = val
+            this.reverbNode.dampening.rampTo(val, 0.01)
           },
         },
         decay: {
@@ -37,7 +37,7 @@ export default {
           value: 0.5,
           handler: (val) => {
             console.log("decay/roomsize is now", val)
-            this.reverbNode.roomSize.value = val
+            this.reverbNode.roomSize.rampTo(val, 0.01)
           },
         },
       },

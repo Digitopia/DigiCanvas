@@ -26,8 +26,8 @@ x done
   - [/] pensar default params of efeitos @Filipe/Ricardo
   - [/] pensar default granular params @Filipe/Ricardo
 - *PLAY MODE*
-  - [ ] not looping on regions full sample
-  - [ ] audio click on ramping on effects params change
+  - [x] not looping when region is full sample (region-end not firing when region.end is buffer duration)
+  - [x] audio click on ramping on effects params change
 - *GRANULAR*
   - [x] fix init values of random param
   - [ ] curva dos sliders logarítmica, no caso do rate e grain size
@@ -36,11 +36,12 @@ x done
 - *EFFECTS*
   - [x] radiais a distancia fixa do effect center e nao crescem
   - [x] scale effect area from center
+  - [x] improve handle size of effect param
   - [!] missing delay icon @Filipe
   - [ ] calcular effect send à distancia do cursor do sample e não ao centro do sample
 - *EXTRA*
   - [x] add audio files
-  - [/] drag and drop audio files 😎
+  - [x] drag and drop audio files 😎
   - [x] edit name of sample (with double click on header to enter edit mode and to exit)
   - [x] preview icons of future features (save and micrphone input)
 

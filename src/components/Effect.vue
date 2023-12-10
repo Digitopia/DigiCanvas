@@ -30,7 +30,7 @@
         :min="param.min"
         :max="param.max"
         :step="param.step"
-        handle-size="-3"
+        handle-size="+2"
         style="position: absolute"
         :update="handleParamChange"
       />
@@ -199,7 +199,9 @@ export default {
 
 .rs-handle {
   box-shadow: 0 0 2px 0 #000 !important;
+  transition: all 0.05s;
   &:hover {
+    transform: scale(1.1);
     cursor: pointer !important;
   }
 }

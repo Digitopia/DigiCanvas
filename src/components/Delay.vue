@@ -27,7 +27,7 @@ export default {
           value: 0.5,
           handler: (val) => {
             console.log("delay time is now", val)
-            this.delayNode.delayTime.value = val
+            this.delayNode.delayTime.rampTo(val, 0.01)
           },
         },
         feedback: {
@@ -37,7 +37,7 @@ export default {
           value: 0.5,
           handler: (val) => {
             console.log("feedback is now", val)
-            this.delayNode.feedback.value = val
+            this.delayNode.feedback.rampTo(val, 0.01)
           },
         },
       },
