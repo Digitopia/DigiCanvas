@@ -88,13 +88,28 @@ import Tone from "tone"
 import gsap from "gsap"
 
 // eslint-disable-next-line no-unused-vars
-import { mapNumber, randomGaussian, randomInt, clamp, lerpColor } from "@/utils"
+import {
+  mapNumber,
+  randomGaussian,
+  // eslint-disable-next-line no-unused-vars
+  randomInt,
+  clamp,
+  lerpColor,
+  // eslint-disable-next-line no-unused-vars
+  mapExp,
+  mapLog,
+} from "@/utils"
 
 export default {
   props: {
     audio: {
       type: String,
       required: true,
+    },
+    // eslint-disable-next-line vue/require-default-prop
+    audioBuffer: {
+      type: AudioBuffer,
+      required: false,
     },
     name: {
       type: String,
@@ -126,13 +141,14 @@ export default {
             grainSize: {
               min: 0.1,
               max: 1.5,
+              step: 0.01,
               value: 0.2,
             },
             rate: {
-              // how often a new grain is produced [100ms, 2000ms]
+              // how often a new grain is produced [100ms, 1500s]
               min: 0.1,
-              max: 2,
-              value: 2, // NOTE: since nexus-ui doesn't support inverted sliders (min > max), for better UX these values later get inverted
+              max: 1.5,
+              value: 1.5, // NOTE: since nexus-ui doesn't support inverted sliders (min > max), for better UX these values later get inverted
             },
             random: {
               // how random (0 is at center, 1 is almost linearly, but still follows normal distribution)
@@ -168,8 +184,8 @@ export default {
       canvasCtx: null,
       width: null,
       height: null,
-      pixelsPerSecond: 30,
-      maxWidth: 800,
+      pixelsPerSecond: 40,
+      maxWidth: 750,
       minWidth: 200,
       originalDuration: null, // so that can revert with double click
       originalWidth: null, // so that can revert with double click
@@ -192,23 +208,15 @@ export default {
     },
 
     bufferDuration() {
-      if (this.audioNode && this.audioNode.buffer)
+      if (this.audioNode && this.audioNode.buffer) {
         return this.audioNode.buffer.duration
+      }
+
       return NaN
     },
 
     grainSize() {
       return this.settings.granular.params.grainSize.value
-    },
-
-    invertedRate() {
-      return mapNumber(
-        this.settings.granular.params.rate.value,
-        this.settings.granular.params.rate.min,
-        this.settings.granular.params.rate.max,
-        this.settings.granular.params.rate.max,
-        this.settings.granular.params.rate.min
-      )
     },
   },
 
@@ -231,6 +239,9 @@ export default {
     window.WaveSurfer = WaveSurfer
     window.region = this.settings.region
     window.settings = this.settings
+
+    window.propAudioBuffer = this.audioBuffer
+    window.propAudio = this.audio
 
     this.editName = this.name
 
@@ -255,14 +266,7 @@ export default {
       }
     })
 
-    gsap.to(this.$refs.container, { opacity: 1, duration: 2 })
-
-    // gsap.to(this.$refs.container, {
-    //   x: randomInt(0, window.innerWidth - this.width * 1.2),
-    //   y: randomInt(0, window.innerHeight - this.height * 1.2),
-    //   ease: "power2.out",
-    //   duration: 1.2,
-    // })
+    // gsap.to(this.$refs.container, { opacity: 1, duration: 2 })
 
     window.grains = this.settings.granular.grains
   },
@@ -276,6 +280,16 @@ export default {
   },
 
   methods: {
+    getInvertedRate() {
+      return mapNumber(
+        this.settings.granular.params.rate.value,
+        this.settings.granular.params.rate.min,
+        this.settings.granular.params.rate.max,
+        this.settings.granular.params.rate.max,
+        this.settings.granular.params.rate.min
+      )
+    },
+
     toggleEditName() {
       this.isEditingName = !this.isEditingName
       if (this.isEditingName) {
@@ -285,10 +299,6 @@ export default {
         this.name = this.editName
         this.draggable.enable()
       }
-    },
-
-    progress2Timestamp(progress) {
-      return mapNumber(progress, 0, 1, 0, this.bufferDuration)
     },
 
     timestamp2Progress(timestamp) {
@@ -325,20 +335,53 @@ export default {
         this.resize()
         // const initX = randomInt(0, window.innerWidth - this.width * 1.2)
         // const initY = randomInt(0, window.innerHeight - this.height * 1.2)
-        const initX = window.innerWidth / 2 - this.width / 2
-        const initY = window.innerHeight / 2 - this.height / 2
-        gsap.to(this.$refs.container, {
-          x: initX,
-          y: initY,
-          ease: "power2.out",
-          duration: 0,
-        })
+        // const initX = window.innerWidth / 2 - this.width / 2
+        // const initY = window.innerHeight / 2 - this.height / 2
+        // gsap.to(this.$refs.container, {
+        //   x: initX,
+        //   y: initY,
+        //   ease: "power2.out",
+        //   duration: 0,
+        // })
+      })
+
+      wavesurfer.on("finish", () => {
+        // since region-out doesn't get fired when region is full sample
+        if (this.isLooping) this.settings.region.play()
+      })
+
+      wavesurfer.on("load", (evt) => {
+        console.log("ON LOAD", evt)
+      })
+
+      wavesurfer.on("loading", () => {
+        console.log("ON LOADING")
       })
 
       this.wavesurfer = wavesurfer
+      window.wavesurfer = wavesurfer
       this.$refs.waveform.addEventListener("click", this.onClick)
 
-      wavesurfer.load(this.audio)
+      if (!this.audioBuffer) wavesurfer.load(this.audio)
+      else {
+        console.log("this.audio", this.audio)
+
+        // this draws the waveform but throws the error GET /blob
+        const p = wavesurfer.loadBlob(
+          this.audio,
+          [this.audioBuffer.getChannelData(0)],
+          this.audioBuffer.duration
+        )
+        console.log(p)
+        window.p = p
+
+        // this DOES NOT get the error /GET a blob, but does not draw the waveform at all
+        // window.p2 = wavesurfer.loadAudio(
+        //   this.audio,
+        //   this.audioBuffer.getChannelData(0),
+        //   this.audioBuffer.duration
+        // )
+      }
 
       this.draggable = Draggable.create(this.$refs.container, {
         trigger: this.$refs.header,
@@ -350,8 +393,6 @@ export default {
           this.$root.$emit("effectDrag", this.$parent.$refs.delay.$children[0])
         },
       })[0]
-
-      window.wavesurfer = wavesurfer
     },
 
     initAudio() {
@@ -374,7 +415,6 @@ export default {
           this.stop() // to avoid UI jump at play
         }, 200) // TODO: requiring timeout
       })
-
       this.audioNode.volume.value = -6
       window.audioNode = this.audioNode
 
@@ -409,9 +449,13 @@ export default {
       this.settings.granular.sliders.grainSize = grainSizeSlider
 
       grainSizeSlider.on("change", (val) => {
-        console.log("grainSize is now", val.toFixed(2))
-
-        this.settings.granular.params.grainSize.value = val
+        const expGrainSize = mapLog(
+          val,
+          this.settings.granular.params.grainSize.min,
+          this.settings.granular.params.grainSize.max
+        )
+        console.log("grainSize is now", val.toFixed(2), expGrainSize.toFixed(2))
+        this.settings.granular.params.grainSize.value = expGrainSize
       })
 
       // rate
@@ -421,9 +465,27 @@ export default {
       })
       this.settings.granular.sliders.rate = rateSlider
       rateSlider.on("change", (val) => {
-        console.log("rate is now", val, this.invertedRate)
-        this.settings.granular.params.rate.value = val
-        this.updateRateInterval()
+        const logRate = mapLog(
+          val,
+          this.settings.granular.params.rate.min,
+          this.settings.granular.params.rate.max
+        )
+        this.settings.granular.params.rate.value = logRate
+        // console.log(
+        //   "inverted rate before exp",
+        //   this.getInvertedRate().toFixed(2)
+        // )
+        // this.settings.granular.params.rate.value = logRate
+        // console.log(
+        //   "inverted rate after exp",
+        //   this.getInvertedRate().toFixed(2)
+        // )
+        console.log(
+          "rate is now",
+          val.toFixed(2),
+          logRate.toFixed(2),
+          this.getInvertedRate().toFixed(2)
+        )
       })
 
       // random
@@ -463,8 +525,8 @@ export default {
       const playbackRate = 1 / (width / this.originalWidth)
 
       // interpolate color
-      const startColor = [255, 255, 255, 0.8]
-      const stopColor = [255, 255, 255, 1]
+      const startColor = [255, 255, 255, 0.95]
+      const stopColor = [255, 255, 255, 0.95]
       const color = lerpColor(
         startColor,
         stopColor,
@@ -543,8 +605,8 @@ export default {
 
     initRegion() {
       console.log("initting region...")
-      const start = this.progress2Timestamp(0.1)
-      const end = this.progress2Timestamp(0.9)
+      const start = 0
+      const end = this.audioNode.buffer.duration
       this.settings.region = this.regionsPlugin.addRegion({
         start,
         end,
@@ -552,30 +614,33 @@ export default {
         color: "rgba(170, 197, 216, 0.1)",
         resize: true,
         drag: true,
-        loop: false, // NOTE: his prop doesn't work, so need to work around with region events
+        loop: false, // NOTE: his prop doesn't work, so need to work around with region and wavesurfer events
       })
       console.log("added region", this.settings.region)
       window.region = this.settings.region
 
-      this.regionsPlugin.on("region-updated", (region) => {
-        console.log("updated region")
+      // this is equivalent to onDragEnd
+      this.settings.region.on("update", () => {
         if (this.mode === "granular") {
-          const mx = (region.end - region.start) / 2 + region.start
+          const { start, end } = this.settings.region
+          const mx = (end - start) / 2 + start
           this.settings.granular.origin = this.timestamp2Progress(mx)
-        } else if (this.mode === "sample") {
-          if (!this.isPlaying) {
-            // to avoid UI jump
-            this.stop()
-          }
+        }
+      })
+
+      this.settings.region.on("update-end", () => {
+        if (this.mode === "sample" && !this.isPlaying) {
+          // to avoid UI jump
+          this.stop()
         }
       })
 
       // workaround for looping region, since loop proper of region not working...
-      this.regionsPlugin.on("region-out", (region) => {
-        console.log("region out", region)
+      this.settings.region.on("region-out", () => {
+        console.log("region out")
         if (this.isLooping) {
           console.log("playing region again")
-          region.play()
+          this.settings.region.play()
         } else {
           this.stop()
         }
@@ -654,15 +719,27 @@ export default {
 
     updateRateInterval() {
       this.clearGranularInterval()
-      console.log("INVERTED RATE", this.invertedRate * 1000)
-      this.settings.granular.params.rate.interval = setInterval(() => {
-        this.addGrain()
-      }, this.invertedRate * 1000)
-      console.log("interval", this.settings.granular.params.rate.interval)
+      const delay = Math.round(this.getInvertedRate() * 1000)
+      console.log("INVERTED RATE", delay)
+      this.settings.granular.params.rate.interval = setInterval(
+        (delay) => {
+          this.addGrain()
+          // update interval at setInterval end with new interval, only if changed from previous
+          const currentDelay = Math.round(this.getInvertedRate() * 1000)
+          if (delay !== currentDelay) {
+            // console.log("updating")
+            this.updateRateInterval()
+          } else {
+            // console.log("not updating")
+          }
+        },
+        delay,
+        delay
+      )
     },
 
     addGrain() {
-      console.log("adding grain...")
+      // console.log("adding grain...")
       // access buffer
       this.buffer = this.audioNode.buffer.getChannelData(0)
 
@@ -675,7 +752,8 @@ export default {
         this.bufferDuration
       )
 
-      const space = (this.settings.region.end - this.settings.region.start) / 2
+      // use 1/4 of the spray (the region of the granular) as std dev
+      const space = (this.settings.region.end - this.settings.region.start) / 4
       const mappedStdDev = mapNumber(
         this.settings.granular.params.random.value,
         0,
@@ -690,7 +768,7 @@ export default {
         this.settings.region.start,
         this.settings.region.end
       )
-      console.log({ baseOffset, mappedStdDev, randOffset, grainOffset })
+      // console.log({ baseOffset, mappedStdDev, randOffset, grainOffset })
 
       // create a grain buffer
       const grain = new Tone.Player(this.audioNode.buffer)
@@ -706,10 +784,6 @@ export default {
       window.grain = grain
       grain.connect(this.audioGainNode)
 
-      // set offsets according to envelope
-      const now = Tone.context.currentTime
-      console.log({ now, grainOffset, grainSize: this.grainSize })
-
       // play grain
       // grain.start(now, grainOffset, this.grainSize) // this clicks!
       grain.start("+0", grainOffset, this.grainSize) // this doesn't!
@@ -719,7 +793,7 @@ export default {
       this.settings.granular.grains.push({ x })
       this.drawGrains()
 
-      // cleanup grain after playing
+      // TODO: cleanup grain after playing
     },
 
     clearCanvas() {
@@ -756,6 +830,7 @@ export default {
     },
 
     onClick() {
+      Tone.context.resume() // so that it works in Chrome/Edge
       if (this.controls) return
       console.log("click")
       if (this.mode === "sample") {
@@ -846,7 +921,7 @@ export default {
 }
 
 .container {
-  position: absolute;
+  position: relative;
   width: 200px;
   margin: 0 auto;
   border-radius: var(--border-radius);
@@ -857,7 +932,7 @@ export default {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   resize: horizontal;
   overflow: hidden;
-  opacity: 0;
+  // opacity: 0;
 }
 
 .spaced-out {

@@ -35,6 +35,7 @@
         :name="sample.name"
         :audio="sample.audio"
         :idx="idx"
+        :audio-buffer="sample.buffer"
         @mouseover.native="$root.lastSampleInteractionIdx = idx"
       />
     </template>
@@ -48,6 +49,14 @@
       accept=".mp3"
       @change="handleAddSound"
     />
+    <a href="https://github.com/Digitopia/DigiCanvas" target="_blank">
+      <img
+        id="info-button"
+        class="app-button scale-hover"
+        src="/icons/info.svg"
+        @click="showInfo = true"
+      />
+    </a>
   </div>
 </template>
 
@@ -58,7 +67,8 @@ import Sample from "@/components/Sample"
 import Reverb from "@/components/Reverb"
 import Delay from "@/components/Delay"
 
-import { randomInt } from "@/utils"
+// eslint-disable-next-line no-unused-vars
+import { randomInt, logMap, mapExp, mapLog } from "@/utils"
 
 export default {
   name: "App",
@@ -119,10 +129,11 @@ export default {
 
   mounted() {
     // this.samples.push(this.presets[0])
-    this.samples.push(
-      this.presets[randomInt(0, Object.keys(this.presets).length - 1)]
-    )
-    // this.samples = this.preset
+
+    // start with a ramdom sample?
+    // this.samples.push(
+    //   this.presets[randomInt(0, Object.keys(this.presets).length - 1)]
+    // )
 
     // quick entry of presets with keyboard (1, 2, 3, 4)
     document.addEventListener("keydown", (event) => {
@@ -182,16 +193,81 @@ export default {
     initSample(file) {
       // Load the dropped audio file
       const reader = new FileReader()
-      reader.onload = () => {
+      reader.onload = (evt) => {
+        // option blob
         const blob = new Blob([reader.result], { type: file.type })
+        console.log("BLOB", blob)
         const blobUrl = URL.createObjectURL(blob)
-        window.blob = blob
-        this.samples.push({
-          audio: blobUrl,
-          name: file.name.replace(/\.[^/.]+$/, ""),
+
+        // check audio duration (by creating an Audio element and getting its metadata)
+        const audio = new Audio()
+        audio.src = blobUrl
+        audio.addEventListener("loadedmetadata", () => {
+          console.log("Audio duration:", audio.duration)
+          if (audio.duration > 5) {
+            console.log(blobUrl)
+            this.samples.push({
+              audio: blobUrl,
+              name: file.name.replace(/\.[^/.]+$/, ""),
+            })
+          } else {
+            alert("Samples need to be between 5 and 15 seconds.")
+            return
+            // TODO: add some silence or crop
+            // eslint-disable-next-line no-unreachable
+            console.log("going to add some silence")
+            const data = evt.target.result
+            Tone.context.decodeAudioData(data, (buffer) => {
+              const modifiedBuffer = this.addSilenceToEnd(buffer, 10)
+              console.log(
+                "Modified audio buffer:",
+                modifiedBuffer,
+                modifiedBuffer.duration
+              )
+              // create a new blob with the silence
+              const blobSilence = new Blob([modifiedBuffer], {
+                type: file.type,
+              })
+              window.modifiedBuffer = modifiedBuffer
+              const blobSilenceUrl = URL.createObjectURL(blobSilence)
+              console.log("BLOB", blobSilence)
+              console.log(blobSilenceUrl)
+              this.samples.push({
+                audio: blobSilenceUrl,
+                name: file.name.replace(/\.[^/.]+$/, ""),
+                buffer: modifiedBuffer,
+              })
+            })
+          }
         })
+        audio.load()
       }
       reader.readAsArrayBuffer(file)
+    },
+
+    addSilenceToEnd(audioBuffer, targetDuration) {
+      const currentDuration = audioBuffer.duration
+      if (currentDuration >= targetDuration) {
+        console.log(
+          "Audio is already equal to or longer than the target duration."
+        )
+        return audioBuffer
+      }
+      const channels = audioBuffer.numberOfChannels
+      const sampleRate = audioBuffer.sampleRate
+      const targetLength = Math.floor(targetDuration * sampleRate)
+      // Create a new AudioBuffer with the target duration
+      const newBuffer = Tone.context.createBuffer(
+        channels,
+        targetLength,
+        sampleRate
+      )
+      // Copy the original audio data to the new buffer
+      for (let channel = 0; channel < channels; channel++) {
+        const channelData = audioBuffer.getChannelData(channel)
+        newBuffer.getChannelData(channel).set(channelData)
+      }
+      return newBuffer
     },
   },
 }
@@ -258,5 +334,12 @@ body {
       cursor: not-allowed !important;
     }
   }
+}
+
+#info-button {
+  top: 10px;
+  right: 10px;
+  width: 15px;
+  height: 15px;
 }
 </style>

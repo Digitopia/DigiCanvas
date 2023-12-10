@@ -94,7 +94,7 @@ export default {
     // eslint-disable-next-line vue/no-mutating-props
     this.params.range = {
       min: 40,
-      max: 150,
+      max: 120,
       step: 1,
       value: 50,
       handler: (val) => {

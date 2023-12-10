@@ -21,26 +21,33 @@ x done
   - [x] backspace delete sample under mouse
   - [x] deploy test link (and retroactively for each tag/version)
   - [x] small UI touches on hover (scaling 1.05 or border)
+  - [x] info icon (links to GH repo, where we can add the ficha tecnica)
+  - [x] revert centering sample on add
+  - [x] smoke test on other browsers apart from FF
 - *AX (AUDIO EXPERIENCE)*
   - [!] pensar default samples @Filipe/Ricardo
   - [/] pensar default params of efeitos @Filipe/Ricardo
   - [/] pensar default granular params @Filipe/Ricardo
+  - [!] default samples between 5s and 15s (caso contrário vai atualizar playback rate para respeitar estes bounds) @Ricardo
 - *PLAY MODE*
   - [x] not looping when region is full sample (region-end not firing when region.end is buffer duration)
   - [x] audio click on ramping on effects params change
+  - [x] sample not playing in Chrome/Edge first try
 - *GRANULAR*
   - [x] fix init values of random param
-  - [ ] curva dos sliders logarítmica, no caso do rate e grain size
-  - [ ] stddev como 1/4 do sprayg
-  - [ ] rate atualiza no prox interval com current value
+  - [x] rate atualiza no prox interval com current value
+  - [x] curva dos sliders logarítmica, no caso do rate e grain size
+  - [x] stddev como 1/4 do spray
+  - [x] update granular origin on region drag (not only on region dragEnd)
 - *EFFECTS*
   - [x] radiais a distancia fixa do effect center e nao crescem
   - [x] scale effect area from center
   - [x] improve handle size of effect param
   - [!] missing delay icon @Filipe
-  - [ ] calcular effect send à distancia do cursor do sample e não ao centro do sample
+  - [>] calcular effect send à distancia do cursor do sample e não ao centro do sample
 - *EXTRA*
   - [x] add audio files
+  - [x] limit adding sounds to [5s,15s]
   - [x] drag and drop audio files 😎
   - [x] edit name of sample (with double click on header to enter edit mode and to exit)
   - [x] preview icons of future features (save and micrphone input)
