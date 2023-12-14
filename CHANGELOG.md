@@ -2,7 +2,7 @@
 Legend
 x done
 / started
-! blocked
+! blocked/pending
 - cancelled
 ? needs clarification/discussion
 > deferred
