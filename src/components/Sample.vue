@@ -53,7 +53,7 @@
         </div>
         <div id="mode-btn" @click.stop="toggleMode()">
           <img
-            :src="mode === 'sample' ? '/icons/play.svg' : '/icons/granular.svg'"
+            :src="mode === 'sample' ? 'icons/play.svg' : 'icons/granular.svg'"
             class="control-icon"
             alt=""
           />
@@ -619,16 +619,13 @@ export default {
       console.log("added region", this.settings.region)
       window.region = this.settings.region
 
-      // this is equivalent to onDragEnd
       this.settings.region.on("update", () => {
         if (this.mode === "granular") {
-          const { start, end } = this.settings.region
-          const mx = (end - start) / 2 + start
-          this.settings.granular.origin = this.timestamp2Progress(mx)
+          this.updateGranularOrigin()
         }
       })
 
-      this.settings.region.on("update-end", () => {
+      this.regionsPlugin.on("region-update-end", () => {
         if (this.mode === "sample" && !this.isPlaying) {
           // to avoid UI jump
           this.stop()
@@ -636,15 +633,21 @@ export default {
       })
 
       // workaround for looping region, since loop proper of region not working...
-      this.settings.region.on("region-out", () => {
+      this.regionsPlugin.on("region-out", (region) => {
         console.log("region out")
         if (this.isLooping) {
           console.log("playing region again")
-          this.settings.region.play()
+          region.play()
         } else {
           this.stop()
         }
       })
+    },
+
+    updateGranularOrigin() {
+      const { start, end } = this.settings.region
+      const mx = (end - start) / 2 + start
+      this.settings.granular.origin = this.timestamp2Progress(mx)
     },
 
     resize() {
@@ -693,6 +696,7 @@ export default {
     },
 
     toggleMode() {
+      this.updateGranularOrigin()
       this.stop()
 
       this.mode = this.mode === "sample" ? "granular" : "sample"
@@ -993,7 +997,6 @@ export default {
 }
 
 #scale-btn {
-  background-image: url("/public/icons/stretch.svg");
   background-color: var(--blue-light);
   &:-moz-drag-over {
     cursor: move !important;

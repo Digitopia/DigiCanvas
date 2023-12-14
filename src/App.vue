@@ -3,28 +3,28 @@
     <img
       id="add-button"
       class="app-button scale-hover"
-      src="/icons/add.svg"
+      src="icons/add.svg"
       style="right: 20px"
       @click="addSound"
     />
     <img
       id="save-button"
       class="app-button disabled"
-      src="/icons/save.svg"
+      src="icons/save.svg"
       style="right: 80px"
       @click="save"
     />
     <img
       id="record-button"
       class="app-button disabled"
-      src="/icons/record.svg"
+      src="icons/record.svg"
       style="right: 140px"
       @click="record"
     />
     <img
       id="mic-button"
       class="app-button disabled"
-      src="/icons/mic.svg"
+      src="icons/mic.svg"
       style="right: 200px"
       @click="microphone"
     />
@@ -53,7 +53,7 @@
       <img
         id="info-button"
         class="app-button scale-hover"
-        src="/icons/info.svg"
+        src="icons/info.svg"
         @click="showInfo = true"
       />
     </a>
@@ -128,7 +128,7 @@ export default {
   },
 
   mounted() {
-    // this.samples.push(this.presets[0])
+    this.samples.push(this.presets[1])
 
     // start with a ramdom sample?
     // this.samples.push(
