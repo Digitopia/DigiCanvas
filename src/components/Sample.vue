@@ -53,7 +53,7 @@
         </div>
         <div id="mode-btn" @click.stop="toggleMode()">
           <img
-            :src="mode === 'sample' ? '/icons/play.svg' : '/icons/granular.svg'"
+            :src="mode === 'sample' ? 'icons/play.svg' : 'icons/granular.svg'"
             class="control-icon"
             alt=""
           />
@@ -993,7 +993,6 @@ export default {
 }
 
 #scale-btn {
-  background-image: url("/public/icons/stretch.svg");
   background-color: var(--blue-light);
   &:-moz-drag-over {
     cursor: move !important;

@@ -8,14 +8,13 @@ x done
 > deferred
 ```
 
-# v1.0 (planned for 2023-12-13)
-— [!] decidir nome
-- [!] deploy to `https://digitopia.casadamusica.com/<nome>`
-- [ ] open source do repo
-- [?] acrescentar entrada em software digitopia.casadamusica.com?
-- [?] Google Analytics?
+# v1.0 (2023-12-14) [Link](https://digitopia.casadamusica.com/DigiCanvas)
+— [x] decidir nome
+- [x] deploy to `https://digitopia.casadamusica.com/DigiCanvas`
+- [x] open source do repo
+- [x] missing delay icon @Filipe
 
-# v0.6 (ongoing and planned for 2023-12-12) [Link](https://v0-6--digicanvas.netlify.app/)
+# v0.6 (released 2023-12-12) [Link](https://v0-6--digicanvas.netlify.app/)
 - *MISC*
   - [x] fix overflow scroll bars and body margins
   - [x] backspace delete sample under mouse
