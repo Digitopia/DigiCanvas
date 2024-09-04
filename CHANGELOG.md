@@ -8,13 +8,18 @@ x done
 > deferred
 ```
 
-# v1.0 (2023-12-14) [Link](https://digitopia.casadamusica.com/DigiCanvas)
+Latest version always deployed at: https://digitopia.casadamusica.com/DigiCanvas
+
+# v1.1 (2024-09-05) [Link](https://v1-1--digicanvas.netlify.app)
+-
+
+# v1.0 (2023-12-14) [Link](https://v1-0--digicanvas.netlify.app)
 — [x] decidir nome
 - [x] deploy to `https://digitopia.casadamusica.com/DigiCanvas`
 - [x] open source do repo
 - [x] missing delay icon @Filipe
 
-# v0.6 (released 2023-12-12) [Link](https://v0-6--digicanvas.netlify.app/)
+# v0.6 (released 2023-12-12) [Link](https://v0-6--digicanvas.netlify.app)
 - *MISC*
   - [x] fix overflow scroll bars and body margins
   - [x] backspace delete sample under mouse
@@ -51,7 +56,7 @@ x done
   - [x] edit name of sample (with double click on header to enter edit mode and to exit)
   - [x] preview icons of future features (save and micrphone input)
 
-# v0.5 (2023-12-07) [Link](https://v0-5--digicanvas.netlify.app/)
+# v0.5 (2023-12-07) [Link](https://v0-5--digicanvas.netlify.app)
 - *MISC*
   - [x] cursorColor a preto e resto default ([bc limitacao cor waveform da lib wavesurfer](https://github.com/katspaugh/wavesurfer.js/discussions/2730))
   - [x] overlay controls overlay tbm row de buttons, mas permite click toggle via clickthrough
@@ -80,7 +85,7 @@ x done
   - [ ] stddev como 1/4 do spray
   - [ ] rate atualiza no prox interval com current value
 
-# v0.4 (2023-11-17) [Link](https://v0-4--digicanvas.netlify.app/)
+# v0.4 (2023-11-17) [Link](https://v0-4--digicanvas.netlify.app)
 - *MISC*
   - [x] atualizar ícones
 - *SAMPLE*
@@ -114,7 +119,7 @@ x done
   - [ ] curva dos sliders logarítmica, no caso do rate e grain size
   - [ ] refactor to fadeIn e fadeOut?
 
-# v0.3 (2023-10-19) [Link](https://v0-3--digicanvas.netlify.app/)
+# v0.3 (2023-10-19) [Link](https://v0-3--digicanvas.netlify.app)
 - [x] add new sounds
 - [x] fixes in granular audio
   - [x] spray em função do tamanho do buffer (0 a 100% do buffer)
@@ -134,16 +139,16 @@ x done
   - [x] bug: not showing progress color in sample mode, after toggling back from granular mode
   - [x] bug: not playing from beginning in sample mode, after toggling back from granular mode
 
-# v0.2c (2023-09-29) [Link](https://v0-2c--digicanvas.netlify.app/)
+# v0.2c (2023-09-29) [Link](https://v0-2c--digicanvas.netlify.app)
 - [x] granular audio
 
-# v0.2b (2023-09-05) [Link](https://v0-2b--digicanvas.netlify.app/)
+# v0.2b (2023-09-05) [Link](https://v0-2b--digicanvas.netlify.app)
 - [x] multi samples with audio
 
 # v0.2a (2023-07-21)
 - [x] multi samples UI
 
-# v0.1 (2023-06-23) [Link](https://v0-1--digicanvas.netlify.app/)
+# v0.1 (2023-06-23) [Link](https://v0-1--digicanvas.netlify.app)
 - *SAMPLE*
   - [x] sempre o mesmo, para já
   - [x] centrado na página

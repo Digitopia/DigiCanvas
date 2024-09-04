@@ -16,14 +16,14 @@
     />
     <img
       id="record-button"
-      class="app-button disabled"
+      class="app-button"
       src="icons/record.svg"
       style="right: 140px"
       @click="record"
     />
     <img
       id="mic-button"
-      class="app-button disabled"
+      class="app-button"
       src="icons/mic.svg"
       style="right: 200px"
       @click="microphone"
@@ -61,7 +61,7 @@
 </template>
 
 <script>
-import Tone from "tone"
+import * as Tone from "tone"
 
 import Sample from "@/components/Sample"
 import Reverb from "@/components/Reverb"
@@ -69,6 +69,49 @@ import Delay from "@/components/Delay"
 
 // eslint-disable-next-line no-unused-vars
 import { randomInt, logMap, mapExp, mapLog } from "@/utils"
+
+const presets = {
+  0: {
+    audio: "presets/guit_plus_background.mp3",
+    name: "guit + bg",
+  },
+  1: {
+    audio: "presets/birds1_mono.mp3",
+    name: "birds",
+  },
+  2: {
+    audio: "presets/chains1_mono.mp3",
+    name: "chains",
+  },
+  3: {
+    audio: "presets/flute1_mono.mp3",
+    name: "flute",
+  },
+  4: {
+    audio: "presets/horse1_mono.mp3",
+    name: "horse",
+  },
+  5: {
+    audio: "presets/marimba_roll_and_clarinet1_mono.mp3",
+    name: "marimba",
+  },
+  6: {
+    audio: "presets/metalHit1_mono.mp3",
+    name: "metal 1",
+  },
+  7: {
+    audio: "presets/metalHit2_mono.mp3",
+    name: "metal 2",
+  },
+  8: {
+    audio: "presets/sailing1_mono.mp3",
+    name: "sailing",
+  },
+  9: {
+    audio: "presets/snoring1_mono.mp3",
+    name: "snoring",
+  },
+}
 
 export default {
   name: "App",
@@ -82,49 +125,18 @@ export default {
   data() {
     return {
       samples: [],
-      presets: {
-        0: {
-          audio: "presets/guit_plus_background.mp3",
-          name: "guit + bg",
-        },
-        1: {
-          audio: "presets/birds1_mono.mp3",
-          name: "birds",
-        },
-        2: {
-          audio: "presets/chains1_mono.mp3",
-          name: "chains",
-        },
-        3: {
-          audio: "presets/flute1_mono.mp3",
-          name: "flute",
-        },
-        4: {
-          audio: "presets/horse1_mono.mp3",
-          name: "horse",
-        },
-        5: {
-          audio: "presets/marimba_roll_and_clarinet1_mono.mp3",
-          name: "marimba",
-        },
-        6: {
-          audio: "presets/metalHit1_mono.mp3",
-          name: "metal 1",
-        },
-        7: {
-          audio: "presets/metalHit2_mono.mp3",
-          name: "metal 2",
-        },
-        8: {
-          audio: "presets/sailing1_mono.mp3",
-          name: "sailing",
-        },
-        9: {
-          audio: "presets/snoring1_mono.mp3",
-          name: "snoring",
-        },
-      },
+      presets: presets,
     }
+  },
+
+  created() {
+    // effect nodes will connect here from other places
+    const useCompressor =
+      new URLSearchParams(window.location.search).get("uc") === "1"
+    this.$root.useCompressor = useCompressor
+    console.log("useCompressor", useCompressor)
+
+    this.$root.preMaster = new Tone.Compressor(-30, 3).connect(Tone.Master)
   },
 
   mounted() {
@@ -138,16 +150,16 @@ export default {
     // quick entry of presets with keyboard (1, 2, 3, 4)
     document.addEventListener("keydown", (event) => {
       if (
-        event.key == 0 ||
-        event.key == 1 ||
-        event.key == 2 ||
-        event.key == 3 ||
-        event.key == 4 ||
-        event.key == 5 ||
-        event.key == 6 ||
-        event.key == 7 ||
-        event.key == 8 ||
-        event.key == 9
+        event.key === 0 ||
+        event.key === 1 ||
+        event.key === 2 ||
+        event.key === 3 ||
+        event.key === 4 ||
+        event.key === 5 ||
+        event.key === 6 ||
+        event.key === 7 ||
+        event.key === 8 ||
+        event.key === 9
       ) {
         this.samples.push(this.presets[event.key])
       }
@@ -170,6 +182,25 @@ export default {
 
     record() {
       console.log("recording...")
+      const recorder = new Tone.Recorder()
+      const synth = new Tone.Synth().connect(recorder)
+      // start recording
+      recorder.start()
+      // generate a few notes
+      synth.triggerAttackRelease("C3", 0.5)
+      synth.triggerAttackRelease("C4", 0.5, "+1")
+      synth.triggerAttackRelease("C5", 0.5, "+2")
+      // wait for the notes to end and stop the recording
+      setTimeout(async () => {
+        // the recorded audio is returned as a blob
+        const recording = await recorder.stop()
+        // download the recording by creating an anchor element and blob url
+        const url = URL.createObjectURL(recording)
+        const anchor = document.createElement("a")
+        anchor.download = "recording.mp3"
+        anchor.href = url
+        anchor.click()
+      }, 2000)
     },
 
     save() {

@@ -1,10 +1,10 @@
 <template>
-  <div ref="container" class="container">
+  <div ref="container" class="container" style="margin: 0">
     <div class="sample" :class="{ playing: isPlaying }">
       <div
         v-show="controls === 'settings'"
         class="controls no-select"
-        @click.stop
+        @click.stop="toggleControls(controls)"
       >
         <div v-show="mode == 'sample'" class="spaced-out">
           <img
@@ -20,9 +20,9 @@
           />
         </div>
         <div v-show="mode === 'granular'" class="granular-sliders spaced-out">
-          <div :id="`grainSize-${idx}`">Gs</div>
-          <div :id="`rate-${idx}`">Rt</div>
-          <div :id="`random-${idx}`">Rd</div>
+          <div :id="`grainSize-${idx}`" @click.stop>Gs</div>
+          <div :id="`rate-${idx}`" @click.stop>Rt</div>
+          <div :id="`random-${idx}`" @click.stop>Rd</div>
         </div>
       </div>
       <div ref="header" class="header scale-hover" @dblclick="toggleEditName">
@@ -84,7 +84,7 @@ import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.esm.js"
 
 import Draggable from "gsap/Draggable"
 import Nexus from "nexusui"
-import Tone from "tone"
+import * as Tone from "tone"
 import gsap from "gsap"
 
 // eslint-disable-next-line no-unused-vars
@@ -266,8 +266,6 @@ export default {
       }
     })
 
-    // gsap.to(this.$refs.container, { opacity: 1, duration: 2 })
-
     window.grains = this.settings.granular.grains
   },
 
@@ -333,16 +331,28 @@ export default {
         Tone.connect(this.audioElementSource, this.audioGainNode)
 
         this.resize()
-        // const initX = randomInt(0, window.innerWidth - this.width * 1.2)
-        // const initY = randomInt(0, window.innerHeight - this.height * 1.2)
-        // const initX = window.innerWidth / 2 - this.width / 2
-        // const initY = window.innerHeight / 2 - this.height / 2
-        // gsap.to(this.$refs.container, {
-        //   x: initX,
-        //   y: initY,
-        //   ease: "power2.out",
-        //   duration: 0,
-        // })
+        this.initDraggable()
+
+        // now that is init, we can show it and avoid flickering of positioning
+        gsap.to(this.$refs.container, { opacity: 1, duration: 1 })
+
+        // middle positioning of new samples
+        let initX, initY
+        if (this.idx === 0) {
+          initX = window.innerWidth / 2 - this.width / 2
+          initY = window.innerHeight / 2 - this.height / 2 - 7
+        } else {
+          // random positioning of new samples
+          initX = randomInt(0, window.innerWidth - this.width * 1.2)
+          initY = randomInt(0, window.innerHeight - this.height * 1.2)
+        }
+
+        gsap.to(this.$refs.container, {
+          x: initX,
+          y: initY,
+          ease: "power2.out",
+          duration: 0,
+        })
       })
 
       wavesurfer.on("finish", () => {
@@ -382,7 +392,12 @@ export default {
         //   this.audioBuffer.duration
         // )
       }
+    },
 
+    initDraggable() {
+      /**
+       * Called from within initWaveform, since needs width of the waveform container
+       */
       this.draggable = Draggable.create(this.$refs.container, {
         trigger: this.$refs.header,
         type: "x,y",
@@ -393,6 +408,11 @@ export default {
           this.$root.$emit("effectDrag", this.$parent.$refs.delay.$children[0])
         },
       })[0]
+
+      gsap.set(this.$refs.container, {
+        x: window.innerWidth / 2 - this.width / 2,
+        y: window.innerHeight / 2 - this.height / 2,
+      })
     },
 
     initAudio() {
@@ -431,8 +451,12 @@ export default {
         this.audioGainNode.connect(this.effectSends[effect])
       })
 
-      // and create audio gain to master
-      this.audioGainNode.connect(Tone.Master)
+      // and create audio gain to preMaster
+      if (this.$root.useCompressor) {
+        this.audioGainNode.connect(this.$root.preMaster)
+      } else {
+        this.audioGainNode.toMaster()
+      }
     },
 
     initGranularSliders() {
@@ -698,19 +722,17 @@ export default {
     toggleMode() {
       this.updateGranularOrigin()
       this.stop()
+      this.clearGrains()
 
       this.mode = this.mode === "sample" ? "granular" : "sample"
       console.log("mode is now", this.mode)
 
-      switch (this.mode) {
-        case "sample":
-          this.wavesurfer.setOptions({ interact: true })
-          break
-
-        case "granular":
-          this.wavesurfer.setOptions({ interact: false })
-          break
+      if (this.mode == "sample") {
+        this.wavesurfer.setOptions({ interact: true })
+      } else if (this.mode == "granular") {
+        this.wavesurfer.setOptions({ interact: false })
       }
+      this.play()
     },
 
     clearGranularInterval() {
@@ -802,6 +824,11 @@ export default {
 
     clearCanvas() {
       this.canvasCtx.clearRect(0, 0, this.width, this.height)
+    },
+
+    clearGrains() {
+      this.settings.granular.grains = []
+      this.drawGrains()
     },
 
     drawGrains() {
@@ -921,13 +948,13 @@ export default {
     opacity: 0.65;
   }
   border-radius: var(--border-radius);
-  pointer-events: none;
+  // pointer-events: none;
 }
 
 .container {
-  position: relative;
+  position: absolute;
   width: 200px;
-  margin: 0 auto;
+  // margin: 0 auto;
   border-radius: var(--border-radius);
   background: rgb(255, 255, 255);
   &.playing {
@@ -936,7 +963,7 @@ export default {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   resize: horizontal;
   overflow: hidden;
-  // opacity: 0;
+  opacity: 0;
 }
 
 .spaced-out {

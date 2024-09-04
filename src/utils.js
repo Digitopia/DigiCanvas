@@ -13,7 +13,7 @@ export function randomInt(min, max) {
   return Math.round(randomFloat(min, max))
 }
 
-// taken from https://stackoverflow.com/questions/25582882/javascript-math-random-normal-distribution-gaussian-bell-curve
+// taken from https://stackoverflow.com/questions/25582882/javascript-math-random-normal-distribution-gaussian-b  ell-curve
 export function randomGaussian(mean = 0, stdev = 1) {
   const u = 1 - Math.random() // Converting [0,1) to (0,1]
   const v = Math.random()
@@ -46,15 +46,15 @@ export function lerpColor(c1, c2, amt) {
   return [r3, g3, b3, a3]
 }
 
-export function mapExp(val, min, max) {
-  /**
-   * Maps a linear range to an exponential one
-   */
-  const norm = mapNumber(val, min, max, 0, 1)
-  return min * (max / min) ** norm
-}
+// export function mapExp(val, min, max) {
+//   /**
+//    * Maps a linear range to an exponential one
+//    */
+//   const norm = mapNumber(val, min, max, 0, 1)
+//   return min * (max / min) ** norm
+// }
 
-export function mapLog(val, min, max) {
+export function mapLogOld(val, min, max) {
   /**
    * Maps a linear range to an exponential one
    */
@@ -62,4 +62,27 @@ export function mapLog(val, min, max) {
   const log = 0.14462 * Math.log(1006.94 * norm)
   const ret = mapNumber(log < 0 ? 0 : log, 0, 1, min, max)
   return ret
+}
+
+export function mapLog(val, min, max) {
+  /**
+   * Maps a linear range to a logarithmic one
+   */
+  if (val <= 0) return min // Handle zero and negative inputs
+  const minLog = Math.log(min)
+  const maxLog = Math.log(max)
+  const scale = (maxLog - minLog) / (max - min)
+  return Math.exp(minLog + scale * (val - min))
+}
+
+export function mapExp(val, min, max) {
+  /**
+   * Maps a linear range to an exponential one
+   */
+  if (val <= min) return min
+  if (val >= max) return max
+  const minExp = Math.log(min)
+  const maxExp = Math.log(max)
+  const scale = (val - min) / (max - min)
+  return Math.exp(minExp + scale * (maxExp - minExp))
 }

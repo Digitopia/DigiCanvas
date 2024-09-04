@@ -8,8 +8,9 @@
 </template>
 
 <script>
-import Tone from "tone"
+import * as Tone from "tone"
 import Effect from "@/components/Effect"
+import { mapExp } from "@/utils"
 
 export default {
   components: {
@@ -26,8 +27,10 @@ export default {
           step: 0.01,
           value: 0.5,
           handler: (val) => {
-            console.log("delay time is now", val)
-            this.delayNode.delayTime.rampTo(val, 0.01)
+            const { min, max } = this.params.delayTime
+            const expVal = mapExp(val, min, max)
+            console.log("delay time is now", val, expVal)
+            // this.delayNode.delayTime.rampTo(expVal, 0.01)
           },
         },
         feedback: {
