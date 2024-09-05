@@ -49,7 +49,7 @@ export function lerpColor(c1, c2, amt) {
 export function mapExp(val, min, max) {
   const norm = mapNumber(val, min, max, 0, 1)
   const exp = norm ** 2
-  const ret = mapNumber(exp, 0, 1, min, max).toFixed(2)
+  const ret = +mapNumber(exp, 0, 1, min, max).toFixed(2)
   return ret
 }
 

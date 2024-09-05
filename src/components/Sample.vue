@@ -342,7 +342,7 @@ export default {
         this.initDraggable()
 
         // now that is init, we can show it and avoid flickering of positioning
-        gsap.to(this.$refs.container, { opacity: 1, duration: 1 })
+        gsap.to(this.$refs.container, { opacity: 1, duration: 0.4 })
 
         // middle positioning of new samples
         let initX, initY
@@ -487,6 +487,7 @@ export default {
           that.settings.granular.params.grainSize.min,
           that.settings.granular.params.grainSize.max
         )
+        console.log("expGrainSize", expGrainSize)
         console.log("grainSize is now", val.toFixed(2), expGrainSize.toFixed(2))
         that.settings.granular.params.grainSize.value = expGrainSize
       })

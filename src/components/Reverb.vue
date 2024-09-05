@@ -21,23 +21,26 @@ export default {
       reverbNode: null,
       params: {
         dampening: {
-          min: 0,
-          max: 20000,
+          min: 0.1,
+          // max: 20000,
+          max: 0.1,
           step: 100,
-          value: 8000,
+          value: 0.1,
           handler: (val) => {
             console.log("dampening is now", val)
-            this.reverbNode.dampening.rampTo(val, 0.01)
+            // this.reverbNode.dampening.rampTo(val, 0.01)
+            this.reverbNode.dampening = val
           },
         },
         decay: {
           min: 0.15,
-          max: 0.5,
+          max: 1.5,
           step: 0.01,
           value: 0.5,
           handler: (val) => {
             console.log("decay/roomsize is now", val)
-            this.reverbNode.roomSize.rampTo(val, 0.01)
+            // this.reverbNode.roomSize.rampTo(val, 0.01)
+            this.reverbNode.decay = val
           },
         },
       },
@@ -46,10 +49,13 @@ export default {
 
   mounted() {
     // reverb node
-    this.reverbNode = new Tone.Freeverb(
-      this.params.decay.value,
-      this.params.dampening.value
-    )
+    // Freeverb doesn't dampening breaking when changing freq in tone@15, so using simple Reverb instead
+    // this.reverbNode = new Tone.Freeverb(
+    //   this.params.decay.value,
+    //   this.params.dampening.value
+    // )
+    this.reverbNode = new Tone.Reverb(this.params.decay.value)
+    window.reverbNode = this.reverbNode
     if (this.$root.useCompressor) {
       // compressor node
       const threshold = -30

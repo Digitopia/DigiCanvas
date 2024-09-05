@@ -19,14 +19,16 @@
       class="app-button"
       src="icons/record.svg"
       style="right: 140px"
-      @click="record"
+      :class="{ recording: recording }"
+      @click="toggleSimpleRecord"
     />
     <img
       id="mic-button"
       class="app-button"
       src="icons/mic.svg"
       style="right: 200px"
-      @click="microphone"
+      :class="{ recording: microphoning }"
+      @click="toggleMicrophone"
     />
     <template v-for="(sample, idx) in samples">
       <Sample
@@ -57,15 +59,23 @@
         @click="showInfo = true"
       />
     </a>
+    <audio id="recording" controls="true"></audio>
   </div>
 </template>
 
 <script>
 import * as Tone from "tone"
 
+import * as lamejs from "@breezystack/lamejs"
+
 import Sample from "@/components/Sample"
 import Reverb from "@/components/Reverb"
 import Delay from "@/components/Delay"
+
+// eslint-disable-next-line no-unused-vars
+import { MediaRecorder, register } from "extendable-media-recorder"
+// eslint-disable-next-line no-unused-vars
+import { connect } from "extendable-media-recorder-wav-encoder"
 
 const presets = {
   0: {
@@ -123,6 +133,8 @@ export default {
     return {
       samples: [],
       presets: presets,
+      recording: false,
+      microphoning: false,
     }
   },
 
@@ -134,6 +146,9 @@ export default {
     console.log("useCompressor", useCompressor)
 
     this.$root.preMaster = new Tone.Compressor(-30, 3).connect(Tone.Master)
+
+    this.initMicrophone()
+    this.initRecord()
   },
 
   mounted() {
@@ -158,6 +173,7 @@ export default {
         event.key == 8 ||
         event.key == 9
       ) {
+        if (this.samples.length >= 10) return
         this.samples.push(this.presets[event.key])
       }
     })
@@ -177,35 +193,197 @@ export default {
       this.initSample(file)
     },
 
-    record() {
-      console.log("recording...")
-      const recorder = new Tone.Recorder()
-      const synth = new Tone.Synth().connect(recorder)
+    toggleSimpleRecord() {
+      if (!this.recording) {
+        this.startSimpleRecord()
+        this.recording = true
+      } else {
+        this.stopSimpleRecord()
+        this.recording = false
+      }
+    },
+
+    startSimpleRecord() {
+      this.simpleRecorder = new Tone.Recorder()
+      this.$root.preMaster.connect(this.simpleRecorder)
       // start recording
-      recorder.start()
-      // generate a few notes
-      synth.triggerAttackRelease("C3", 0.5)
-      synth.triggerAttackRelease("C4", 0.5, "+1")
-      synth.triggerAttackRelease("C5", 0.5, "+2")
-      // wait for the notes to end and stop the recording
-      setTimeout(async () => {
-        // the recorded audio is returned as a blob
-        const recording = await recorder.stop()
-        // download the recording by creating an anchor element and blob url
-        const url = URL.createObjectURL(recording)
-        const anchor = document.createElement("a")
-        anchor.download = "recording.mp3"
-        anchor.href = url
-        anchor.click()
-      }, 2000)
+      this.simpleRecorder.start()
+    },
+
+    async stopSimpleRecord() {
+      const recording = await this.simpleRecorder.stop()
+      const url = URL.createObjectURL(recording)
+      const anchor = document.createElement("a")
+      anchor.download = "recording.webm"
+      anchor.href = url
+      anchor.click()
+    },
+
+    async initRecord() {
+      console.log("recording...")
+
+      this.mediaRecorder = null
+      this.audioBlobs = []
+      this.capturedStream = null
+
+      // Register the extendable-media-recorder-wav-encoder
+      // await register(await connect())
+    },
+
+    async record() {
+      if (!this.recording) {
+        console.log("recording...")
+        this.startRecording()
+        this.recording = true
+      } else {
+        console.log("finished recording")
+        const audioBlob = await this.stopRecording()
+        if (audioBlob) {
+          const audio = new Audio()
+          audio.src = URL.createObjectURL(audioBlob)
+          audio.play()
+        }
+        this.recording = false
+      }
+    },
+
+    // Starts recording audio
+    startRecording() {
+      return navigator.mediaDevices
+        .getUserMedia({
+          audio: {
+            echoCancellation: true,
+          },
+        })
+        .then((stream) => {
+          this.audioBlobs = []
+          this.capturedStream = stream
+
+          // Use the extended MediaRecorder library
+          this.mediaRecorder = new MediaRecorder(stream, {
+            mimeType: "audio/ogg",
+          })
+
+          // Add audio blobs while recording
+          this.mediaRecorder.addEventListener("dataavailable", (event) => {
+            this.audioBlobs.push(event.data)
+          })
+
+          this.mediaRecorder.start()
+        })
+        .catch((e) => {
+          console.error(e)
+        })
+    },
+
+    stopRecording() {
+      return new Promise((resolve) => {
+        if (!this.mediaRecorder) {
+          resolve(null)
+          return
+        }
+
+        this.mediaRecorder.addEventListener("stop", () => {
+          console.log("stopped")
+          const mimeType = this.mediaRecorder.mimeType
+          const audioBlob = new Blob(this.audioBlobs, { type: mimeType })
+
+          if (this.capturedStream) {
+            this.capturedStream.getTracks().forEach((track) => track.stop())
+          }
+
+          resolve(audioBlob)
+        })
+
+        this.mediaRecorder.stop()
+      })
+    },
+
+    convertWavToMp3(wavBlob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+
+        reader.onload = function () {
+          const arrayBuffer = this.result
+
+          // Create a WAV decoder
+          // @ts-expect-error - No idea
+          const wavDecoder = lamejs.WavHeader.readHeader(
+            new DataView(arrayBuffer)
+          )
+
+          // Get the WAV audio data as an array of samples
+          // const wavSamples = new Int16Array(arrayBuffer, wavDecoder.dataOffset, wavDecoder.dataLen / 2);
+          const wavSamples = new Int16Array(
+            arrayBuffer,
+            wavDecoder.dataOffset,
+            wavDecoder.dataLen / 2
+          )
+
+          // Create an MP3 encoder
+          const mp3Encoder = new lamejs.Mp3Encoder(
+            wavDecoder.channels,
+            wavDecoder.sampleRate,
+            128
+          )
+
+          // Encode the WAV samples to MP3
+          const mp3Buffer = mp3Encoder.encodeBuffer(wavSamples)
+
+          // Finalize the MP3 encoding
+          const mp3Data = mp3Encoder.flush()
+
+          // Combine the MP3 header and data into a new ArrayBuffer
+          const mp3BufferWithHeader = new Uint8Array(
+            mp3Buffer.length + mp3Data.length
+          )
+          mp3BufferWithHeader.set(mp3Buffer, 0)
+          mp3BufferWithHeader.set(mp3Data, mp3Buffer.length)
+
+          // Create a Blob from the ArrayBuffer
+          const mp3Blob = new Blob([mp3BufferWithHeader], { type: "audio/mp3" })
+
+          resolve(mp3Blob)
+        }
+
+        reader.onerror = function (error) {
+          reject(error)
+        }
+
+        // Read the input blob as an ArrayBuffer
+        reader.readAsArrayBuffer(wavBlob)
+      })
     },
 
     save() {
       console.log("saving...")
     },
 
-    microphone() {
-      console.log("microphoning...")
+    initMicrophone() {
+      this.microphone = new Tone.UserMedia()
+      this.recorder = new Tone.Recorder()
+      this.microphone.connect(this.recorder)
+      this.microphone.open()
+    },
+
+    async toggleMicrophone() {
+      // Tone.context.resume()
+      if (!this.microphoning) {
+        console.log("microphoning...")
+        this.microphoning = true
+        this.recorder.start()
+      } else {
+        console.log("finished microphoning")
+        this.microphoning = false
+        const data = await this.recorder.stop()
+        const blobUrl = URL.createObjectURL(data)
+        // const player = new Tone.Player(blobUrl, () => {}).toDestination()
+        this.samples.push({
+          audio: blobUrl,
+          name: "my recording",
+        })
+        // window.player = player
+      }
     },
 
     handleDrop(event) {
@@ -369,5 +547,9 @@ body {
   right: 10px;
   width: 15px;
   height: 15px;
+}
+
+.recording {
+  background: red;
 }
 </style>

@@ -1,9 +1,7 @@
-*KNOWN BUGS*
-- [ ] drag de slider granular se release fora do slider faz dismiss à janela de background
-
 *FEATURES*
-- [/] possibilidade de gravação directa na plataforma (record)
-- [/] a gravação e descarga da sessão (export)
+- [x] possibilidade de gravação através de microfone (microphone)
+- [/] a gravação de uma sessão (record)
+- [>] descarga da sessão (export)
 - [>] mobile UI
 *SAMPLE*
 - [x] carregar start sample no meio da página (em vez de no topo)
@@ -23,7 +21,7 @@
 *EFFECTS/DELAY*
 - [x] slider delayTime também deveria ser exponencial
 - [x] feedback delay max 0.99 em vez de 1 (senão cria loop infinito)
-- [ ] quando feedback no máximo, também está a processar o som, mesmo quando não sobreposto
+- [x] quando feedback no máximo, também está a processar o som, mesmo quando não sobreposto
 *MISC*
 - [x] improved debug console messages
 - [?] adicionar e apagar sons em touchscreen
@@ -38,13 +36,17 @@
 - [?] toggle between play mode and granular, remembers last cursor position?
 - [?] curva logarítmica para effect send? (still applies?)
 
+*KNOWN BUGS*
+- [ ] drag de slider granular se release fora do slider faz dismiss à janela de background
+- [ ] se gravação som <6s (minWidth) distorciona o playback rate to match (acrescentar silêncio no final)
+
 ---------
 
 *LATER*
-- [?] acrescentar entrada em software digitopia.casadamusica.com?
 - [x] edit name of sample
 - [x] faders radiais com raio ligeiramente maior que o efeito
 - [x] scale effect area from center
+- [?] acrescentar entrada em software digitopia.casadamusica.com?
 - [/] ui para remover sons (trash icon como botão)
 - [/] add info icon
 - [/] se som < minWidth (~6s) acrescenta silencio no final
