@@ -27,8 +27,7 @@ export default {
           value: 8000,
           handler: (val) => {
             console.log("dampening is now", val)
-            // this.reverbNode.dampening.rampTo(val, 0.01) // Tone v15 doesn't allow .rampTo here
-            this.reverbNode.dampening = val
+            this.reverbNode.dampening.rampTo(val, 0.01)
           },
         },
         decay: {

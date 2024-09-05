@@ -46,43 +46,17 @@ export function lerpColor(c1, c2, amt) {
   return [r3, g3, b3, a3]
 }
 
-// export function mapExp(val, min, max) {
-//   /**
-//    * Maps a linear range to an exponential one
-//    */
-//   const norm = mapNumber(val, min, max, 0, 1)
-//   return min * (max / min) ** norm
-// }
-
-export function mapLogOld(val, min, max) {
-  /**
-   * Maps a linear range to an exponential one
-   */
+export function mapExp(val, min, max) {
   const norm = mapNumber(val, min, max, 0, 1)
-  const log = 0.14462 * Math.log(1006.94 * norm)
-  const ret = mapNumber(log < 0 ? 0 : log, 0, 1, min, max)
+  const exp = norm ** 2
+  const ret = mapNumber(exp, 0, 1, min, max).toFixed(2)
   return ret
 }
 
 export function mapLog(val, min, max) {
-  /**
-   * Maps a linear range to a logarithmic one
-   */
   if (val <= 0) return min // Handle zero and negative inputs
   const minLog = Math.log(min)
   const maxLog = Math.log(max)
   const scale = (maxLog - minLog) / (max - min)
   return Math.exp(minLog + scale * (val - min))
-}
-
-export function mapExp(val, min, max) {
-  /**
-   * Maps a linear range to an exponential one
-   */
-  if (val <= min) return min
-  if (val >= max) return max
-  const minExp = Math.log(min)
-  const maxExp = Math.log(max)
-  const scale = (val - min) / (max - min)
-  return Math.exp(minExp + scale * (maxExp - minExp))
 }

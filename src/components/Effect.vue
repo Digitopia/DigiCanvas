@@ -98,15 +98,13 @@ export default {
       step: 1,
       value: 50,
       handler: (val) => {
-        console.log("handler", val)
         // this.rangeRadius = val
         // changing width/height
         // this.$refs.area.style.width = `${val * 2}px`
         // this.$refs.area.style.height = `${val * 2}px`
         const { min, max } = this.params.range
-        console.log(min, max)
-        const scale = mapNumber(val, min, max, 1, max / min)
-        console.log({ scale })
+        const scale = mapNumber(val, min, max, 1, max / min).toFixed(2)
+        console.log(`range is now ${val}px scale(${scale})`)
         this.$refs.effectArea.style.transform = `scale(${scale})`
       },
     }
@@ -145,11 +143,8 @@ export default {
     },
 
     handleParamChange(roundSliderEvt) {
-      console.log("handleParamChange!")
-      console.log("handleParamChange!")
       const paramName = roundSliderEvt.id
       const val = roundSliderEvt.value
-      console.log(paramName, val)
       this.params[paramName].handler(val)
     },
   },

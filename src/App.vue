@@ -67,9 +67,6 @@ import Sample from "@/components/Sample"
 import Reverb from "@/components/Reverb"
 import Delay from "@/components/Delay"
 
-// eslint-disable-next-line no-unused-vars
-import { randomInt, logMap, mapExp, mapLog } from "@/utils"
-
 const presets = {
   0: {
     audio: "presets/guit_plus_background.mp3",
@@ -150,16 +147,16 @@ export default {
     // quick entry of presets with keyboard (1, 2, 3, 4)
     document.addEventListener("keydown", (event) => {
       if (
-        event.key === 0 ||
-        event.key === 1 ||
-        event.key === 2 ||
-        event.key === 3 ||
-        event.key === 4 ||
-        event.key === 5 ||
-        event.key === 6 ||
-        event.key === 7 ||
-        event.key === 8 ||
-        event.key === 9
+        event.key == 0 ||
+        event.key == 1 ||
+        event.key == 2 ||
+        event.key == 3 ||
+        event.key == 4 ||
+        event.key == 5 ||
+        event.key == 6 ||
+        event.key == 7 ||
+        event.key == 8 ||
+        event.key == 9
       ) {
         this.samples.push(this.presets[event.key])
       }

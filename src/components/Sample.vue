@@ -1,11 +1,14 @@
 <template>
+  <!-- CONTAINER -->
   <div ref="container" class="container" style="margin: 0">
+    <!-- SAMPLE -->
     <div class="sample" :class="{ playing: isPlaying }">
       <div
         v-show="controls === 'settings'"
         class="controls no-select"
         @click.stop="toggleControls(controls)"
       >
+        <!-- SAMPLE mode controls -->
         <div v-show="mode == 'sample'" class="spaced-out">
           <img
             v-for="m in settings.sample.modes"
@@ -19,12 +22,14 @@
             @click.stop="settings.sample.mode = m"
           />
         </div>
+        <!-- GRANULAR mode controls -->
         <div v-show="mode === 'granular'" class="granular-sliders spaced-out">
           <div :id="`grainSize-${idx}`" @click.stop>Gs</div>
           <div :id="`rate-${idx}`" @click.stop>Rt</div>
           <div :id="`random-${idx}`" @click.stop>Rd</div>
         </div>
       </div>
+      <!-- HEADER -->
       <div ref="header" class="header scale-hover" @dblclick="toggleEditName">
         <template v-if="!isEditingName">
           {{ name }}
@@ -39,11 +44,14 @@
           />
         </template>
       </div>
+      <!-- WAVEFORM -->
       <div id="waveform-wrapper" ref="waveformWrapper">
         <div ref="waveform" :class="`waveform-${idx}`"></div>
         <canvas ref="canvas" class="canvas"></canvas>
       </div>
+      <!-- BUTTONS -->
       <div id="buttons">
+        <!-- SETTINGS button -->
         <div
           id="settings-btn"
           :class="{ active: controls === 'settings' }"
@@ -51,6 +59,7 @@
         >
           <img src="icons/overlay.svg" class="control-icon" alt="" />
         </div>
+        <!-- MODE button -->
         <div id="mode-btn" @click.stop="toggleMode()">
           <img
             :src="mode === 'sample' ? 'icons/play.svg' : 'icons/granular.svg'"
@@ -58,6 +67,7 @@
             alt=""
           />
         </div>
+        <!-- SCALE button -->
         <div
           id="scale-btn"
           ref="scaleButton"
@@ -91,11 +101,9 @@ import gsap from "gsap"
 import {
   mapNumber,
   randomGaussian,
-  // eslint-disable-next-line no-unused-vars
   randomInt,
   clamp,
   lerpColor,
-  // eslint-disable-next-line no-unused-vars
   mapExp,
   mapLog,
 } from "@/utils"
@@ -340,7 +348,7 @@ export default {
         let initX, initY
         if (this.idx === 0) {
           initX = window.innerWidth / 2 - this.width / 2
-          initY = window.innerHeight / 2 - this.height / 2 - 7
+          initY = window.innerHeight / 2 - this.height / 2 - 75
         } else {
           // random positioning of new samples
           initX = randomInt(0, window.innerWidth - this.width * 1.2)
@@ -472,14 +480,15 @@ export default {
       })
       this.settings.granular.sliders.grainSize = grainSizeSlider
 
-      grainSizeSlider.on("change", (val) => {
-        const expGrainSize = mapLog(
+      const that = this
+      grainSizeSlider.on("change", function (val) {
+        const expGrainSize = mapExp(
           val,
-          this.settings.granular.params.grainSize.min,
-          this.settings.granular.params.grainSize.max
+          that.settings.granular.params.grainSize.min,
+          that.settings.granular.params.grainSize.max
         )
         console.log("grainSize is now", val.toFixed(2), expGrainSize.toFixed(2))
-        this.settings.granular.params.grainSize.value = expGrainSize
+        that.settings.granular.params.grainSize.value = expGrainSize
       })
 
       // rate
@@ -720,8 +729,9 @@ export default {
     },
 
     toggleMode() {
+      const wasPlaying = this.isPlaying
       this.updateGranularOrigin()
-      this.stop()
+      this.stop() // need to play/stop between modes
       this.clearGrains()
 
       this.mode = this.mode === "sample" ? "granular" : "sample"
@@ -732,7 +742,9 @@ export default {
       } else if (this.mode == "granular") {
         this.wavesurfer.setOptions({ interact: false })
       }
-      this.play()
+      if (wasPlaying) {
+        this.play()
+      }
     },
 
     clearGranularInterval() {
@@ -881,13 +893,13 @@ export default {
     },
 
     effectDrag(evt) {
-      // console.log("got event", evt.$el, evt.name, evt.rangeRadius)
       // Calculate the distance between this sample center and the effect center
-      const { name: effectName, rangeRadius: effectRadius } = evt
-      const effectElem = evt.$el
-      const effectRect = effectElem.getBoundingClientRect()
-      const x1 = effectRect.left + effectRect.width / 2
-      const y1 = effectRect.top + effectRect.height / 2
+      const effectName = evt.name
+      const effectAreaEl = evt.$el.querySelector(".effect-area")
+      window.effect = effectAreaEl
+      const effectAreaRect = effectAreaEl.getBoundingClientRect()
+      const x1 = effectAreaRect.left + effectAreaRect.width / 2
+      const y1 = effectAreaRect.top + effectAreaRect.height / 2
       const waveformRect = this.$refs.waveform.getBoundingClientRect()
       const x2 = waveformRect.left + waveformRect.width / 2
       const y2 = waveformRect.top + waveformRect.height / 2
@@ -895,13 +907,20 @@ export default {
       const dy = y1 - y2
       const distance = Math.round(Math.sqrt(dx * dx + dy * dy))
 
-      console.log(`"d(${this.name}, ${effectName})"`, distance)
-
+      const effectRadius = effectAreaRect.width
       if (distance > effectRadius) return
-      const val = mapNumber(distance, 0, effectRadius, 1, 0).toFixed(2)
-      console.log(val)
 
-      this.effectSends[effectName].gain.exponentialRampToValueAtTime(val, 0.02)
+      const effectSendVal = mapNumber(distance, 0, effectRadius, 1, 0).toFixed(
+        2
+      )
+      console.log(
+        `d(${this.name}, ${effectName}) = ${distance}px effectSend(${effectSendVal})`
+      )
+
+      this.effectSends[effectName].gain.exponentialRampToValueAtTime(
+        effectSendVal,
+        0.02
+      )
     },
   },
 }

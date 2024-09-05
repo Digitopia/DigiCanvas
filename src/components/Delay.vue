@@ -22,7 +22,7 @@ export default {
       delayNode: null,
       params: {
         delayTime: {
-          min: 0,
+          min: 0.01,
           max: 2.5,
           step: 0.01,
           value: 0.5,
