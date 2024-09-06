@@ -59,7 +59,6 @@
         @click="showInfo = true"
       />
     </a>
-    <audio id="recording" controls="true"></audio>
   </div>
 </template>
 

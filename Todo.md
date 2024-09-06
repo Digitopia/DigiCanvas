@@ -1,8 +1,8 @@
 *FEATURES*
 - [x] possibilidade de gravação através de microfone (microphone)
 - [/] a gravação de uma sessão (record)
-- [>] descarga da sessão (export)
 - [>] mobile UI
+- [>] descarga da sessão (export)
 *SAMPLE*
 - [x] carregar start sample no meio da página (em vez de no topo)
 - [x] samples a mudarem de posição quando um é apagado
@@ -28,13 +28,13 @@
 - [?] botão para apagar sons (em desktop também?)
 - [?] timestretch duas oitavas para cima e para baixo independentemente do tamanho do ficheiro original
 - [?] parar em modo granular deve deixar os grãos todos terminar ou parar de golpe?
+- [?] max 10 samples per canvas?
+- [?] toggle between play mode and granular, remembers last cursor position?
+- [?] curva logarítmica para effect send? (still applies?)
 - [R] aconteceu-me, várias vezes, apagar o som e ele continuar a tocar (by @oscar)
 - [R] aconteceu a interacção play/stop no modo reprodução deixar de funcionar, aleatoriamente. (by @filipe)
 - [R] por vezes a interacção de mudança de volume deixa de funcionar (aconteceu no modo granular) (by @filipe)
 - [R] clicks em cada grão, no modo granular. Janela tem de ser ajustada para não fazer click. (by @filipe)
-- [?] max 10 samples per canvas?
-- [?] toggle between play mode and granular, remembers last cursor position?
-- [?] curva logarítmica para effect send? (still applies?)
 
 *KNOWN BUGS*
 - [ ] drag de slider granular se release fora do slider faz dismiss à janela de background

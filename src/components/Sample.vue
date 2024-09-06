@@ -487,7 +487,6 @@ export default {
           that.settings.granular.params.grainSize.min,
           that.settings.granular.params.grainSize.max
         )
-        console.log("expGrainSize", expGrainSize)
         console.log("grainSize is now", val.toFixed(2), expGrainSize.toFixed(2))
         that.settings.granular.params.grainSize.value = expGrainSize
       })
