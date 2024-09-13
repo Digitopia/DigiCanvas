@@ -10,10 +10,13 @@
   },
   "dependencies": {
     "@breezystack/lamejs": "^1.2.7",
+    "@zip.js/zip.js": "^2.7.52",
+    "audiobuffer-to-wav": "^1.0.0",
     "core-js": "^3.8.3",
     "extendable-media-recorder": "^9.2.11",
     "extendable-media-recorder-wav-encoder": "^7.0.115",
     "gsap": "^3.12.1",
+    "lodash.merge": "^4.6.2",
     "nexusui": "^2.1.6",
     "tone": "^15.0.4",
     "vue": "^2.6.14",

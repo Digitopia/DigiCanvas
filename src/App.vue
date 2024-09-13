@@ -9,10 +9,10 @@
     />
     <img
       id="save-button"
-      class="app-button disabled"
+      class="app-button"
       src="icons/save.svg"
       style="right: 80px"
-      @click="save"
+      @click="saveSession"
     />
     <img
       id="record-button"
@@ -30,17 +30,17 @@
       :class="{ recording: microphoning }"
       @click="toggleMicrophone"
     />
-    <template v-for="(sample, idx) in samples">
-      <Sample
-        :ref="`sample-${idx}`"
-        :key="idx"
-        :name="sample.name"
-        :audio="sample.audio"
-        :idx="idx"
-        :audio-buffer="sample.buffer"
-        @mouseover.native="$root.lastSampleInteractionIdx = idx"
-      />
-    </template>
+    <Sample
+      v-for="(sample, idx) in samples"
+      ref="samples"
+      :key="idx"
+      :name="sample.name"
+      :audio="sample.audio"
+      :idx="idx"
+      :audio-buffer="sample.buffer"
+      @mouseover.native="$root.lastSampleInteractionIdx = idx"
+      @destroyed="destroyed"
+    />
     <Reverb ref="reverb" style="bottom: 50px; left: 30px" />
     <Delay ref="delay" style="bottom: 50px; left: 280px" />
     <input
@@ -64,17 +64,29 @@
 
 <script>
 import * as Tone from "tone"
+// import Vue from "vue"
 
 import * as lamejs from "@breezystack/lamejs"
 
 import Sample from "@/components/Sample"
 import Reverb from "@/components/Reverb"
 import Delay from "@/components/Delay"
-
+import { isMobile, audioBufferToWav } from "@/utils"
 // eslint-disable-next-line no-unused-vars
 import { MediaRecorder, register } from "extendable-media-recorder"
 // eslint-disable-next-line no-unused-vars
 import { connect } from "extendable-media-recorder-wav-encoder"
+
+// import merge from "lodash.merge"
+
+import {
+  BlobWriter,
+  TextReader,
+  ZipWriter,
+  BlobReader,
+  ZipReader,
+  TextWriter,
+} from "@zip.js/zip.js"
 
 const presets = {
   0: {
@@ -148,15 +160,12 @@ export default {
 
     this.initMicrophone()
     this.initRecord()
+
+    console.log("isMobile", isMobile())
   },
 
   mounted() {
     this.samples.push(this.presets[1])
-
-    // start with a ramdom sample?
-    // this.samples.push(
-    //   this.presets[randomInt(0, Object.keys(this.presets).length - 1)]
-    // )
 
     // quick entry of presets with keyboard (1, 2, 3, 4)
     document.addEventListener("keydown", (event) => {
@@ -306,7 +315,6 @@ export default {
           const arrayBuffer = this.result
 
           // Create a WAV decoder
-          // @ts-expect-error - No idea
           const wavDecoder = lamejs.WavHeader.readHeader(
             new DataView(arrayBuffer)
           )
@@ -354,8 +362,103 @@ export default {
       })
     },
 
-    save() {
-      console.log("saving...")
+    destroyed(name) {
+      // find the sample by name and remove it
+      const sample = this.samples.find((sample) => sample.name === name)
+      if (sample) {
+        this.samples.splice(this.samples.indexOf(sample), 1)
+      }
+    },
+
+    downloadFile(blob, filename) {
+      const a = document.createElement("a")
+      const url = URL.createObjectURL(blob)
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      setTimeout(function () {
+        document.body.removeChild(a)
+        window.URL.revokeObjectURL(url)
+      }, 0)
+    },
+
+    async loadSession(zipFileBlob) {
+      this.samples = []
+
+      const zipFileReader = new BlobReader(zipFileBlob)
+      const configWriter = new TextWriter()
+      const zipReader = new ZipReader(zipFileReader)
+
+      const entries = await zipReader.getEntries()
+      for (let i = 0; i < entries.length; i++) {
+        const entry = entries[i]
+        console.log("entry", entry)
+        const blobWriter = new BlobWriter()
+        if (entry.filename === "config.json") {
+          const configJson = await entry.getData(configWriter)
+          const config = JSON.parse(configJson)
+          const d1 = this.$refs.delay.$data
+          const d2 = config.effects.delay
+          // const merged = merge(this.$refs.delay.$data, config.effects.delay)
+          this.$refs.delay.$data.params.range = 100
+          // this.$refs.delay.$data = merged
+          // Vue.set(this.$refs.delay, "$data", merged)
+          window.d1 = d1
+          window.d2 = d2
+          // window.merged = merged
+        } else {
+          const blobMp3 = await entry.getData(blobWriter)
+          window.blob = blobMp3
+          const blobUrl = URL.createObjectURL(blobMp3)
+          this.samples.push({
+            audio: blobUrl,
+            name: "foo", // TODO: fix the name
+          })
+          console.log(blobMp3)
+        }
+      }
+      await zipReader.close()
+    },
+
+    async saveSession() {
+      const saveFilename = prompt("name to save?")
+      const zipFileWriter = new BlobWriter()
+      const zipWriter = new ZipWriter(zipFileWriter)
+
+      // save session state
+      const configData = this.getSaveData()
+      const configJson = JSON.stringify(configData, null, 4)
+      const configBlob = new Blob([configJson], { type: "application/json" })
+      const configReader = new TextReader(configBlob)
+      await zipWriter.add("config.json", configReader)
+
+      // save audio samples
+      for (let idx = 0; idx < this.$refs.samples.length; idx++) {
+        const sample = this.$refs.samples[idx]
+        const buffer = sample.audioNode.buffer
+        var wav = audioBufferToWav(buffer)
+        const blobWav = new Blob([wav], { type: "audio/mpeg" })
+        const blobMp3 = await this.convertWavToMp3(blobWav)
+        const blobReader = new BlobReader(blobMp3)
+        await zipWriter.add(`${sample.name}.mp3`, blobReader)
+      }
+
+      await zipWriter.close()
+
+      // zip the thing and download it
+      const zipFileBlob = await zipFileWriter.getData()
+      this.downloadFile(zipFileBlob, `${saveFilename}.digicanvas`)
+    },
+
+    getSaveData() {
+      return {
+        samples: this.$refs.samples.map((sample) => sample.getSaveData()),
+        effects: {
+          reverb: this.$refs.reverb.getSaveData(),
+          delay: this.$refs.delay.getSaveData(),
+        },
+      }
     },
 
     initMicrophone() {
@@ -388,8 +491,18 @@ export default {
     handleDrop(event) {
       console.log("handling drop")
       const file = event.dataTransfer.files[0]
+      window.file = file
+      console.log(file)
       if (file && file.type.startsWith("audio/")) {
         this.initSample(file)
+      } else if (file.name.endsWith(".digicanvas")) {
+        console.log("should load this one")
+        if (
+          confirm(
+            "Loading this configuration file will loose all current state session. Are you sure you want to proceed?"
+          )
+        )
+          this.loadSession(file)
       } else {
         alert("Please drop a valid audio file.")
       }

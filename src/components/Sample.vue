@@ -106,6 +106,7 @@ import {
   lerpColor,
   mapExp,
   mapLog,
+  getCenter,
 } from "@/utils"
 
 export default {
@@ -279,8 +280,9 @@ export default {
 
   beforeDestroy() {
     console.log("this is going to be destroyed")
+    this.$emit("destroyed", this.name)
     this.resizeObserver.unobserve(this.$refs.container)
-    this.$root.$off("toggleCofftrols", this.toggleControls)
+    this.$root.$off("toggleControls", this.toggleControls)
     this.$root.$off("effectDrag", this.effectDrag)
     this.$el.parentNode.removeChild(this.$el)
   },
@@ -896,17 +898,13 @@ export default {
       // Calculate the distance between this sample center and the effect center
       const effectName = evt.name
       const effectAreaEl = evt.$el.querySelector(".effect-area")
-      window.effect = effectAreaEl
-      const effectAreaRect = effectAreaEl.getBoundingClientRect()
-      const x1 = effectAreaRect.left + effectAreaRect.width / 2
-      const y1 = effectAreaRect.top + effectAreaRect.height / 2
-      const waveformRect = this.$refs.waveform.getBoundingClientRect()
-      const x2 = waveformRect.left + waveformRect.width / 2
-      const y2 = waveformRect.top + waveformRect.height / 2
+      const { x: x1, y: y1 } = getCenter(effectAreaEl)
+      const { x: x2, y: y2 } = getCenter(this.$refs.waveform)
       const dx = x1 - x2
       const dy = y1 - y2
       const distance = Math.round(Math.sqrt(dx * dx + dy * dy))
 
+      const effectAreaRect = effectAreaEl.getBoundingClientRect()
       const effectRadius = effectAreaRect.width
       if (distance > effectRadius) return
 
@@ -921,6 +919,43 @@ export default {
         effectSendVal,
         0.02
       )
+    },
+
+    getSaveData() {
+      return {
+        ...getCenter(this.$el),
+        name: this.name,
+        mode: this.mode,
+        settings: {
+          sample: {
+            mode: this.settings.sample.mode,
+          },
+          granular: {
+            origin: this.settings.granular.origin,
+            params: {
+              grainSize: {
+                value: this.settings.granular.params.grainSize.value,
+              },
+              rate: {
+                value: this.settings.granular.params.rate.value,
+              },
+              random: {
+                value: this.settings.granular.params.random.value,
+              },
+            },
+          },
+          scale: {
+            params: {
+              amplitude: {
+                value: this.settings.scale.params.amplitude.value,
+              },
+              timestretch: {
+                value: this.settings.scale.params.timestretch.value,
+              },
+            },
+          },
+        },
+      }
     },
   },
 }

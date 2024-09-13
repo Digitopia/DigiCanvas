@@ -6,7 +6,7 @@ x done
 - cancelled
 ? needs clarification/discussion
 > deferred
-r can't **r**eproduce
+r can't (r)seproduce
 ```
 
 # v1.1 (2024-09-05) [Link](https://v1-1--digicanvas.netlify.app)
@@ -52,7 +52,6 @@ r can't **r**eproduce
 *KNOWN BUGS*
 - [>] drag de slider granular se release fora do slider faz dismiss à janela de background
 - [>] se gravação som <6s (minWidth) distorciona o playback rate to match (acrescentar silêncio no final)
-
 
 # v1.0 (2023-12-14) [Link](https://digitopia.casadamusica.com/DigiCanvas)
 — [x] decidir nome

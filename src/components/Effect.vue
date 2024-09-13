@@ -114,6 +114,7 @@ export default {
 
   mounted() {
     this.initDraggable()
+    window.slider = this
   },
 
   methods: {

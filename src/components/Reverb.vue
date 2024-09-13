@@ -10,6 +10,7 @@
 <script>
 import * as Tone from "tone"
 import Effect from "@/components/Effect"
+import { getCenter } from "@/utils"
 
 export default {
   components: {
@@ -22,7 +23,6 @@ export default {
       params: {
         dampening: {
           min: 0.1,
-          // max: 20000,
           max: 0.1,
           step: 100,
           value: 0.1,
@@ -48,6 +48,7 @@ export default {
   },
 
   mounted() {
+    window.reverb = this
     // reverb node
     // Freeverb doesn't dampening breaking when changing freq in tone@15, so using simple Reverb instead
     // this.reverbNode = new Tone.Freeverb(
@@ -68,6 +69,26 @@ export default {
     console.log("created reverb node and compressor node")
     if (!this.$root.effectNodes) this.$root.effectNodes = []
     this.$root.effectNodes["reverb"] = this.reverbNode
+  },
+
+  methods: {
+    getSaveData() {
+      return {
+        ...getCenter(this.$el),
+        name: this.name,
+        params: {
+          dampening: {
+            value: this.params.dampening.value,
+          },
+          decay: {
+            value: this.params.decay.value,
+          },
+          range: {
+            value: this.params.range.value,
+          },
+        },
+      }
+    },
   },
 }
 </script>

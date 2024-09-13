@@ -10,7 +10,7 @@
 <script>
 import * as Tone from "tone"
 import Effect from "@/components/Effect"
-import { mapExp } from "@/utils"
+import { mapExp, getCenter } from "@/utils"
 
 export default {
   components: {
@@ -55,6 +55,26 @@ export default {
     console.log("created delay node")
     if (!this.$root.effectNodes) this.$root.effectNodes = []
     this.$root.effectNodes["delay"] = this.delayNode
+  },
+
+  methods: {
+    getSaveData() {
+      return {
+        ...getCenter(this.$el),
+        name: this.name,
+        params: {
+          delayTime: {
+            value: this.params.delayTime.value,
+          },
+          feedback: {
+            value: this.params.feedback.value,
+          },
+          range: {
+            value: this.params.range.value,
+          },
+        },
+      }
+    },
   },
 }
 </script>
