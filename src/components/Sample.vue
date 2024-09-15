@@ -1,6 +1,11 @@
 <template>
   <!-- CONTAINER -->
-  <div ref="container" class="container" style="margin: 0">
+  <div
+    ref="sample"
+    class="container"
+    :class="{ debug: $root.debug }"
+    style="margin: 0"
+  >
     <!-- SAMPLE -->
     <div class="sample" :class="{ playing: isPlaying }">
       <div
@@ -97,7 +102,12 @@ import Nexus from "nexusui"
 import * as Tone from "tone"
 import gsap from "gsap"
 
-// eslint-disable-next-line no-unused-vars
+export const SAMPLE_PIXELS_PER_SECOND = 40
+export const SAMPLE_MAX_WIDTH = 600
+export const SAMPLE_MIN_WIDTH = 120
+export const SAMPLE_MIN_WIDTH_UPLOAD = 200
+export const SAMPLE_HEIGHT = 128
+
 import {
   mapNumber,
   randomGaussian,
@@ -132,10 +142,17 @@ export default {
 
   data() {
     return {
+      // audio nodes
+      audioNode: null, // to be used as source of the grains
+      audioGainNode: null, // gain node to control via amplitude slider
+      effectSends: {
+        // gain nodes for each effect send
+        reverb: null,
+        delay: null,
+      },
+      audioElementSource: null, // to be used to route the audio from waveform into the Tone.js
       isEditingName: false,
       editName: null,
-      audioNode: null, // to be used as source of the grains
-      audioElementSource: null, // to be used to route the audio from waveform into the Tone.js
       wavesurfer: null,
       controls: "", // other options: 'settings', 'granular' (ui)
       mode: "sample", // or 'granular'
@@ -193,15 +210,12 @@ export default {
       canvasCtx: null,
       width: null,
       height: null,
-      pixelsPerSecond: 40,
-      maxWidth: 750,
-      minWidth: 200,
+      pixelsPerSecond: SAMPLE_PIXELS_PER_SECOND,
+      maxWidth: SAMPLE_MAX_WIDTH,
+      minWidth: SAMPLE_MIN_WIDTH,
       originalDuration: null, // so that can revert with double click
       originalWidth: null, // so that can revert with double click
-      effectSends: {
-        reverb: null,
-        delay: null,
-      },
+      paperRect: null,
     }
   },
 
@@ -220,7 +234,6 @@ export default {
       if (this.audioNode && this.audioNode.buffer) {
         return this.audioNode.buffer.duration
       }
-
       return NaN
     },
 
@@ -231,11 +244,11 @@ export default {
 
   watch: {
     isPlaying() {
-      console.log("isPlaying", this.isPlaying)
+      console.debug("isPlaying", this.isPlaying)
     },
 
     controls() {
-      console.log("controls are now", this.controls)
+      console.debug("controls are now", this.controls)
       const bool = this.controls === null || this.controls === "scale"
       this.settings.region.setOptions({
         resize: bool,
@@ -245,13 +258,6 @@ export default {
   },
 
   mounted() {
-    window.WaveSurfer = WaveSurfer
-    window.region = this.settings.region
-    window.settings = this.settings
-
-    window.propAudioBuffer = this.audioBuffer
-    window.propAudio = this.audio
-
     this.editName = this.name
 
     this.initWaveform()
@@ -259,11 +265,11 @@ export default {
     this.initGranularSliders()
     this.initCanvas()
 
-    this.$refs.container.style.minWidth = this.minWidth + "px"
-    this.$refs.container.style.maxWidth = this.maxWidth + "px"
+    this.$refs.sample.style.minWidth = this.minWidth + "px"
+    this.$refs.sample.style.maxWidth = this.maxWidth + "px"
 
     this.$root.$on("toggleControls", this.toggleControls)
-    this.$root.$on("effectDrag", this.effectDrag)
+    this.$root.$on("effectDragUseArea", this.effectDragUseArea)
 
     document.addEventListener("keydown", (event) => {
       if (
@@ -279,12 +285,27 @@ export default {
   },
 
   beforeDestroy() {
-    console.log("this is going to be destroyed")
+    console.info("beforeDestroy", this.name)
     this.$emit("destroyed", this.name)
-    this.resizeObserver.unobserve(this.$refs.container)
+    this.resizeObserver.unobserve(this.$refs.sample)
     this.$root.$off("toggleControls", this.toggleControls)
-    this.$root.$off("effectDrag", this.effectDrag)
+    this.$root.$off("effectDragUseArea", this.effectDragUseArea)
     this.$el.parentNode.removeChild(this.$el)
+
+    // clean up audio nodes
+    const nodes = [
+      this.audioNode,
+      this.audioGainNode,
+      this.effectSends.reverb,
+      this.effectSends.delay,
+      // this.audioElementSource,
+    ]
+    nodes.forEach((node) => {
+      if (node) {
+        node.dispose()
+        node = null
+      }
+    })
   },
 
   methods: {
@@ -313,10 +334,10 @@ export default {
       return mapNumber(timestamp, 0, this.bufferDuration, 0, 1)
     },
 
-    initWaveform() {
+    async initWaveform() {
       const wavesurfer = WaveSurfer.create({
         container: this.$refs.waveform,
-        backgroundColor: "white",
+        backgroundColor: "rgba(255, 255, 255, 0.1)",
         waveColor: "lightgray",
         progressColor: "lightgray",
         cursorColor: "black",
@@ -333,18 +354,18 @@ export default {
       // Initialize the Regions plugin
       this.regionsPlugin = wavesurfer.registerPlugin(RegionsPlugin.create())
 
-      wavesurfer.on("ready", () => {
-        console.log("waveform ready for", this.audio)
-        this.audioElementSource = Tone.context.createMediaElementSource(
+      wavesurfer.on("ready", async () => {
+        console.debug("waveform ready for", this.audio)
+        this.audioElementSource = Tone.getContext().createMediaElementSource(
           wavesurfer.media
         )
         Tone.connect(this.audioElementSource, this.audioGainNode)
 
-        this.resize()
+        await this.resize()
         this.initDraggable()
 
         // now that is init, we can show it and avoid flickering of positioning
-        gsap.to(this.$refs.container, { opacity: 1, duration: 0.4 })
+        gsap.to(this.$refs.sample, { opacity: 1, duration: 0.4 })
 
         // middle positioning of new samples
         let initX, initY
@@ -357,11 +378,20 @@ export default {
           initY = randomInt(0, window.innerHeight - this.height * 1.2)
         }
 
-        gsap.to(this.$refs.container, {
+        gsap.to(this.$refs.sample, {
           x: initX,
           y: initY,
           ease: "power2.out",
           duration: 0,
+        })
+
+        // set paper rect to be used for intersection with effects area
+        const { x, y } = getCenter(this.$refs.waveform)
+        this.paperRect = new this.$root.paper.Path.Rectangle({
+          position: { x, y },
+          size: [this.width, this.height],
+          fillColor: "lightblue",
+          strokeColor: "blue",
         })
       })
 
@@ -370,30 +400,18 @@ export default {
         if (this.isLooping) this.settings.region.play()
       })
 
-      wavesurfer.on("load", (evt) => {
-        console.log("ON LOAD", evt)
-      })
-
-      wavesurfer.on("loading", () => {
-        console.log("ON LOADING")
-      })
-
       this.wavesurfer = wavesurfer
-      window.wavesurfer = wavesurfer
       this.$refs.waveform.addEventListener("click", this.onClick)
 
       if (!this.audioBuffer) wavesurfer.load(this.audio)
       else {
-        console.log("this.audio", this.audio)
-
         // this draws the waveform but throws the error GET /blob
         const p = wavesurfer.loadBlob(
           this.audio,
           [this.audioBuffer.getChannelData(0)],
           this.audioBuffer.duration
         )
-        console.log(p)
-        window.p = p
+        console.debug(p)
 
         // this DOES NOT get the error /GET a blob, but does not draw the waveform at all
         // window.p2 = wavesurfer.loadAudio(
@@ -404,38 +422,44 @@ export default {
       }
     },
 
+    // Called from within initWaveform, since needs width of the waveform container
     initDraggable() {
-      /**
-       * Called from within initWaveform, since needs width of the waveform container
-       */
-      this.draggable = Draggable.create(this.$refs.container, {
+      this.draggable = Draggable.create(this.$refs.sample, {
         trigger: this.$refs.header,
         type: "x,y",
         bounds: "html",
         zIndexBoost: true,
         onDrag: () => {
-          this.$root.$emit("effectDrag", this.$parent.$refs.reverb.$children[0])
-          this.$root.$emit("effectDrag", this.$parent.$refs.delay.$children[0])
+          this.$root.$emit(
+            "effectDragUseArea",
+            this.$parent.$refs.reverb.$children[0]
+          )
+          this.$root.$emit(
+            "effectDragUseArea",
+            this.$parent.$refs.delay.$children[0]
+          )
+          // update paper rect
+          const { x, y } = getCenter(this.$refs.waveform)
+          this.paperRect.set({ position: { x, y } })
         },
       })[0]
 
-      gsap.set(this.$refs.container, {
+      gsap.set(this.$refs.sample, {
         x: window.innerWidth / 2 - this.width / 2,
         y: window.innerHeight / 2 - this.height / 2,
       })
     },
 
     initAudio() {
-      console.log("init audio")
-      // init audio node
+      console.debug("init audio")
+
       this.audioNode = new Tone.Player(this.audio, () => {
-        console.log("loaded audio", this.audio)
+        console.debug("loaded audio", this.audio)
         this.originalDuration = this.bufferDuration
-        this.$refs.container.style.width = `${
+        this.$refs.sample.style.width = `${
           this.bufferDuration * this.pixelsPerSecond
         }px`
-        this.originalWidth = parseInt(this.$refs.container.style.width)
-        console.log("originalWidth", this.originalWidth)
+        this.originalWidth = parseInt(this.$refs.sample.style.width)
 
         this.resetTimestretch()
         this.initResizeObserver()
@@ -446,7 +470,6 @@ export default {
         }, 200) // TODO: requiring timeout
       })
       this.audioNode.volume.value = -6
-      window.audioNode = this.audioNode
 
       // gain node to control via amplitude slider
       this.audioGainNode = new Tone.Gain(
@@ -462,11 +485,7 @@ export default {
       })
 
       // and create audio gain to preMaster
-      if (this.$root.useCompressor) {
-        this.audioGainNode.connect(this.$root.preMaster)
-      } else {
-        this.audioGainNode.toMaster()
-      }
+      this.audioGainNode.connect(this.$root.preMaster)
     },
 
     initGranularSliders() {
@@ -489,7 +508,11 @@ export default {
           that.settings.granular.params.grainSize.min,
           that.settings.granular.params.grainSize.max
         )
-        console.log("grainSize is now", val.toFixed(2), expGrainSize.toFixed(2))
+        console.debug(
+          "grainSize is now",
+          val.toFixed(2),
+          expGrainSize.toFixed(2)
+        )
         that.settings.granular.params.grainSize.value = expGrainSize
       })
 
@@ -506,16 +529,7 @@ export default {
           this.settings.granular.params.rate.max
         )
         this.settings.granular.params.rate.value = logRate
-        // console.log(
-        //   "inverted rate before exp",
-        //   this.getInvertedRate().toFixed(2)
-        // )
-        // this.settings.granular.params.rate.value = logRate
-        // console.log(
-        //   "inverted rate after exp",
-        //   this.getInvertedRate().toFixed(2)
-        // )
-        console.log(
+        console.debug(
           "rate is now",
           val.toFixed(2),
           logRate.toFixed(2),
@@ -530,7 +544,7 @@ export default {
       })
       this.settings.granular.sliders.rate = randomSlider
       randomSlider.on("change", (val) => {
-        console.log("random is now", val)
+        console.debug("random is now", val)
         this.settings.granular.params.random.value = val
       })
 
@@ -545,18 +559,18 @@ export default {
 
     updateAmplitude(val) {
       // amplitude maps at a 1:1 to barHeight
-      console.log("amplitude is now", val)
+      console.debug("amplitude is now", val)
       this.wavesurfer.setOptions({
         barHeight: val,
       })
-      console.log("using amplitude of ", val, "to apply in gain node")
+      console.debug("using amplitude of ", val, "to apply in gain node")
       this.audioGainNode.gain.exponentialRampToValueAtTime(val, 0.02)
       this.settings.scale.params.amplitude.value = val
     },
 
     updateTimestretch(width) {
-      console.log("timestretch is now", width)
-      this.$refs.container.style.width = `${width}px`
+      console.debug("timestretch is now", width)
+      this.$refs.sample.style.width = `${width}px`
       const playbackRate = 1 / (width / this.originalWidth)
 
       // interpolate color
@@ -567,10 +581,10 @@ export default {
         stopColor,
         mapNumber(width, this.minWidth, this.maxWidth, 0, 1)
       )
-      this.$refs.container.style.backgroundColor = `rgba(${color[0]},${color[1]},${color[2]},${color[3]})`
+      this.$refs.sample.style.backgroundColor = `rgba(${color[0]},${color[1]},${color[2]},${color[3]})`
 
       this.settings.scale.params.timestretch.value = playbackRate
-      console.log("playbackRate", playbackRate)
+      console.debug("playbackRate", playbackRate)
 
       this.resize()
 
@@ -605,7 +619,7 @@ export default {
           gsap.set(this.$refs.scaleImage, { cursor: "grabbing" })
         },
         onDrag: function () {
-          console.log("end", this.endX, this.endY)
+          console.debug("end", this.endX, this.endY)
           if (this.lockedAxis === "x") {
             const mappedAmplitude = mapNumber(
               this.endY,
@@ -624,12 +638,12 @@ export default {
       const resizeObserver = new ResizeObserver((entries) => {
         entries.forEach((entry) => {
           const newWidth = entry.contentRect.width
-          console.log("newWidth", newWidth)
+          console.debug("newWidth", newWidth)
           this.updateTimestretch(newWidth)
         })
       })
 
-      resizeObserver.observe(this.$refs.container)
+      resizeObserver.observe(this.$refs.sample)
       this.resizeObserver = resizeObserver // so that later can unobserve before destroy
     },
 
@@ -639,7 +653,7 @@ export default {
     },
 
     initRegion() {
-      console.log("initting region...")
+      console.debug("initting region...")
       const start = 0
       const end = this.audioNode.buffer.duration
       this.settings.region = this.regionsPlugin.addRegion({
@@ -651,8 +665,7 @@ export default {
         drag: true,
         loop: false, // NOTE: his prop doesn't work, so need to work around with region and wavesurfer events
       })
-      console.log("added region", this.settings.region)
-      window.region = this.settings.region
+      console.debug("added region", this.settings.region)
 
       this.settings.region.on("update", () => {
         if (this.mode === "granular") {
@@ -669,9 +682,9 @@ export default {
 
       // workaround for looping region, since loop proper of region not working...
       this.regionsPlugin.on("region-out", (region) => {
-        console.log("region out")
+        console.debug("region out")
         if (this.isLooping) {
-          console.log("playing region again")
+          console.debug("playing region again")
           region.play()
         } else {
           this.stop()
@@ -685,15 +698,21 @@ export default {
       this.settings.granular.origin = this.timestamp2Progress(mx)
     },
 
-    resize() {
-      console.log("resizing...")
-      this.width = this.$refs.waveformWrapper.clientWidth
-      this.height = this.$refs.waveformWrapper.clientHeight
-      console.log({ height: this.height })
-      console.log(this.width, this.height)
-      this.canvas.setAttribute("width", this.width)
-      this.canvas.setAttribute("height", this.height)
-      this.wavesurfer.setOptions({ height: this.height })
+    async resize() {
+      console.debug("resizing...")
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          this.width = this.$refs.waveformWrapper.clientWidth
+          console.debug("init in resize width is", this.width)
+          this.height = this.$refs.waveformWrapper.clientHeight
+          console.debug({ height: this.height })
+          console.debug(this.width, this.height)
+          this.canvas.setAttribute("width", this.width)
+          this.canvas.setAttribute("height", this.height)
+          this.wavesurfer.setOptions({ height: this.height })
+          resolve()
+        }, 100)
+      })
     },
 
     play() {
@@ -726,7 +745,7 @@ export default {
     },
 
     toggleControls(controls) {
-      console.log("toggling controls:", controls)
+      console.debug("toggling controls:", controls)
       this.controls = this.controls === controls ? null : controls
     },
 
@@ -737,7 +756,7 @@ export default {
       this.clearGrains()
 
       this.mode = this.mode === "sample" ? "granular" : "sample"
-      console.log("mode is now", this.mode)
+      console.debug("mode is now", this.mode)
 
       if (this.mode == "sample") {
         this.wavesurfer.setOptions({ interact: true })
@@ -750,7 +769,7 @@ export default {
     },
 
     clearGranularInterval() {
-      console.log(
+      console.debug(
         "clearing granular interval",
         this.settings.granular.params.rate.interval
       )
@@ -760,17 +779,17 @@ export default {
     updateRateInterval() {
       this.clearGranularInterval()
       const delay = Math.round(this.getInvertedRate() * 1000)
-      console.log("INVERTED RATE", delay)
+      console.debug("INVERTED RATE", delay)
       this.settings.granular.params.rate.interval = setInterval(
         (delay) => {
           this.addGrain()
           // update interval at setInterval end with new interval, only if changed from previous
           const currentDelay = Math.round(this.getInvertedRate() * 1000)
           if (delay !== currentDelay) {
-            // console.log("updating")
+            // console.debug("updating")
             this.updateRateInterval()
           } else {
-            // console.log("not updating")
+            // console.debug("not updating")
           }
         },
         delay,
@@ -779,7 +798,7 @@ export default {
     },
 
     addGrain() {
-      // console.log("adding grain...")
+      // console.debug("adding grain...")
       // access buffer
       this.buffer = this.audioNode.buffer.getChannelData(0)
 
@@ -808,7 +827,7 @@ export default {
         this.settings.region.start,
         this.settings.region.end
       )
-      // console.log({ baseOffset, mappedStdDev, randOffset, grainOffset })
+      // console.debug({ baseOffset, mappedStdDev, randOffset, grainOffset })
 
       // create a grain buffer
       const grain = new Tone.Player(this.audioNode.buffer)
@@ -821,7 +840,6 @@ export default {
       }, this.grainSize * 1000)
 
       grain.volume.value = -6
-      window.grain = grain
       grain.connect(this.audioGainNode)
 
       // play grain
@@ -866,7 +884,7 @@ export default {
         // circle
         this.canvasCtx.beginPath()
         const r = ((this.width / this.bufferDuration) * this.grainSize) / 2
-        console.log("HEIGHT", this.height)
+        console.debug("HEIGHT", this.height)
         this.canvasCtx.arc(x, this.height / 2, r, 0, 2 * Math.PI)
         // this.canvasCtx.stroke()
         this.canvasCtx.fill()
@@ -877,10 +895,10 @@ export default {
     onClick() {
       Tone.context.resume() // so that it works in Chrome/Edge
       if (this.controls) return
-      console.log("click")
+      console.debug("click")
       if (this.mode === "sample") {
         if (this.wavesurfer.isPlaying()) {
-          console.log("stopping...")
+          console.debug("stopping...")
           this.stop()
         } else {
           this.play()
@@ -894,7 +912,8 @@ export default {
       }
     },
 
-    effectDrag(evt) {
+    // @deprecated, use effectDragUseArea instead
+    effectDragUseDistance(evt) {
       // Calculate the distance between this sample center and the effect center
       const effectName = evt.name
       const effectAreaEl = evt.$el.querySelector(".effect-area")
@@ -911,7 +930,7 @@ export default {
       const effectSendVal = mapNumber(distance, 0, effectRadius, 1, 0).toFixed(
         2
       )
-      console.log(
+      console.debug(
         `d(${this.name}, ${effectName}) = ${distance}px effectSend(${effectSendVal})`
       )
 
@@ -919,6 +938,37 @@ export default {
         effectSendVal,
         0.02
       )
+    },
+
+    effectDragUseArea(evt) {
+      const effectName = evt.name
+      const sampleRect = this.paperRect
+      const effectCricle = evt.$data.paperCircle
+
+      // circle needs to be converted into a path so that can calculate intersection
+      const effectCirclePath = effectCricle.toPath()
+      const intersection = sampleRect.intersect(effectCirclePath)
+      effectCirclePath.remove()
+      if (!intersection) return
+      const intersectionRate = intersection.area / sampleRect.area
+      intersection.remove()
+      console.debug(
+        `U(${effectName},${this.name})=`,
+        `${(intersectionRate * 100).toFixed(2)}%`
+      )
+
+      const effectSendVal = intersectionRate
+      if (effectSendVal) {
+        this.setEffectSend(effectName, effectSendVal)
+      }
+    },
+
+    setEffectSend(effectName, effectSendVal) {
+      // this.effectSends[effectName].gain.exponentialRampToValueAtTime(
+      //   effectSendVal,
+      //   0.02
+      // )
+      this.effectSends[effectName].gain.value = effectSendVal
     },
 
     getSaveData() {
@@ -986,8 +1036,7 @@ export default {
 #buttons {
   display: flex;
   justify-content: space-between;
-  // margin-top: 3px;
-  height: var(--buttons-height);
+  height: 34px;
 }
 
 .controls {
@@ -1018,6 +1067,10 @@ export default {
   resize: horizontal;
   overflow: hidden;
   opacity: 0;
+
+  &.debug {
+    opacity: 0.2 !important;
+  }
 }
 
 .spaced-out {

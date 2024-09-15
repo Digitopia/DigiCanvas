@@ -1,17 +1,34 @@
 ```
 Legend
 x done
-/ started
+✔️ done
+/ in progress
+~ in progress
 ! blocked/pending
 - cancelled
 ? needs clarification/discussion
 > deferred
-r can't (r)seproduce
+r can't (r)eproduce
+  drive-by fix/improvement
 ```
+
+# v1.3 (2024-09-20) [Link](https://v1-2--digicanvas.netlify.app)
+- [✔️] effectSend = A(U(effect, sample)) / A(sample)
+- [✔️] effect max radius so that it covers 100% of biggest sample
+- [✔️] trash icon
+- [ ] slider exponencial rate granular
+- [~] record session
+- [ ] UI para tablets
+- [ ] drag de slider granular se release fora do slider faz dismiss à janela de background
+- debug mode with `?debug=1`
+- improved cleanup of resources (audio buffers) when samples get removed
+
+# v1.2 (2024-09-13) [Link](https://v1-2--digicanvas.netlify.app)
+- [/] export session (save only, load in progress)
 
 # v1.1 (2024-09-05) [Link](https://v1-1--digicanvas.netlify.app)
 *FEATURES*
-- [x] possibilidade de gravação através de microfone (microphone)
+- [x] possibilidade de gravaçãox através de microfone (microphone)
 - [/] a gravação de uma sessão (record)
 - [>] mobile UI
 - [>] descarga da sessão (export)
@@ -38,8 +55,7 @@ r can't (r)seproduce
 - [x] quando feedback no máximo, também está a processar o som, mesmo quando não sobreposto
 *MISC*
 - [x] improved debug console messages
-- [?] adicionar e apagar sons em touchscreen
-- [?] botão para apagar sons (em desktop também?)
+- [?] adicionar e apagar sons em tablet (trash icon)
 - [?] timestretch duas oitavas para cima e para baixo independentemente do tamanho do ficheiro original
 - [?] parar em modo granular deve deixar os grãos todos terminar ou parar de golpe?
 - [?] max 10 samples per canvas?

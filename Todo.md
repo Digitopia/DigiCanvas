@@ -1,17 +1,9 @@
-*FEATURES*
-- [/] record session
-- [/] save/load session
-*SAMPLE*
-- [>] melhorar interação com canto inferior direito (é preciso clicar em dois pontos ligeiramente diferentes para cada uma das acções)
-*AX*
-*EFFECTS*
-*EFFECTS/REVERB*
-*EFFECTS/DELAY*
-*MISC*
+# BACKLOG
+
+*BUGS*
 - [ ] drag de slider granular se release fora do slider faz dismiss à janela de background
-- [ ] se gravação som <6s (minWidth) distorciona o playback rate to match (acrescentar silêncio no final)
 *NEEDS CLARIFICATION/DISCUSSION*
-- [ ] mobile UI
+- [>] melhorar interação com canto inferior direito (é preciso clicar em dois pontos ligeiramente diferentes para cada uma das acções)
 - [?] adicionar e apagar sons em touchscreen
 - [?] botão para apagar sons (em desktop também?)
 - [?] timestretch duas oitavas para cima e para baixo independentemente do tamanho do ficheiro original
@@ -27,21 +19,18 @@
 
 ---------
 
-*LATER*
+# ICEBOX
+- [?] acrescentar entrada em software digitopia.casadamusica.com?
+- [?] Google Analytics?
+- [?] favicon
+
 - [x] edit name of sample
 - [x] faders radiais com raio ligeiramente maior que o efeito
 - [x] scale effect area from center
-- [?] acrescentar entrada em software digitopia.casadamusica.com?
-- [/] ui para remover sons (trash icon como botão)
-- [/] add info icon
-- [/] se som < minWidth (~6s) acrescenta silencio no final
-- [?] Google Analytics?
-- [ ] calcular effect send à distancia do cursor do sample e não ao centro do sample
-- [ ] current interaction with volume forces jumps
+- [x] gravar
+
 - [ ] icons for granular params?
 - [ ] filtro low e high pass (também no modo granular?)
-- [x] gravar
-- [ ] favicon
 
 *(CRAZY) IDEAS*
 - permitir adicionar whatever effect de Tone.js

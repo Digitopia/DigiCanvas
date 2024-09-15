@@ -1,24 +1,39 @@
 <template>
   <div id="app" class="no-select" @dragover.prevent @drop.prevent="handleDrop">
+    <canvas
+      id="paper-canvas"
+      ref="paperCanvas"
+      width="100%"
+      height="100%"
+      style="z-index: 0"
+      :class="{ debug: $root.debug }"
+    ></canvas>
     <img
       id="add-button"
       class="app-button scale-hover"
       src="icons/add.svg"
       style="right: 20px"
-      @click="addSound"
+      @click="addSample"
+    />
+    <img
+      id="add-button"
+      class="app-button scale-hover"
+      src="icons/trash.svg"
+      style="right: 80px"
+      @click="removeSample"
     />
     <img
       id="save-button"
       class="app-button"
       src="icons/save.svg"
-      style="right: 80px"
+      style="right: 140px"
       @click="saveSession"
     />
     <img
       id="record-button"
       class="app-button"
       src="icons/record.svg"
-      style="right: 140px"
+      style="right: 200px"
       :class="{ recording: recording }"
       @click="toggleSimpleRecord"
     />
@@ -26,7 +41,7 @@
       id="mic-button"
       class="app-button"
       src="icons/mic.svg"
-      style="right: 200px"
+      style="right: 260px"
       :class="{ recording: microphoning }"
       @click="toggleMicrophone"
     />
@@ -49,7 +64,7 @@
       type="file"
       style="display: none"
       accept=".mp3"
-      @change="handleAddSound"
+      @change="handleSampleFileUpload"
     />
     <a href="https://github.com/Digitopia/DigiCanvas" target="_blank">
       <img
@@ -63,30 +78,24 @@
 </template>
 
 <script>
-import * as Tone from "tone"
-// import Vue from "vue"
+import Delay from "@/components/Delay"
+import Reverb from "@/components/Reverb"
+import Sample from "@/components/Sample"
+
+import { audioBufferToWav } from "@/utils"
 
 import * as lamejs from "@breezystack/lamejs"
-
-import Sample from "@/components/Sample"
-import Reverb from "@/components/Reverb"
-import Delay from "@/components/Delay"
-import { isMobile, audioBufferToWav } from "@/utils"
-// eslint-disable-next-line no-unused-vars
-import { MediaRecorder, register } from "extendable-media-recorder"
-// eslint-disable-next-line no-unused-vars
-import { connect } from "extendable-media-recorder-wav-encoder"
-
-// import merge from "lodash.merge"
-
 import {
+  BlobReader,
   BlobWriter,
   TextReader,
-  ZipWriter,
-  BlobReader,
-  ZipReader,
   TextWriter,
+  ZipReader,
+  ZipWriter,
 } from "@zip.js/zip.js"
+import { MediaRecorder } from "extendable-media-recorder"
+import paper from "paper"
+import * as Tone from "tone"
 
 const presets = {
   0: {
@@ -143,7 +152,7 @@ export default {
   data() {
     return {
       samples: [],
-      presets: presets,
+      presets,
       recording: false,
       microphoning: false,
     }
@@ -151,54 +160,70 @@ export default {
 
   created() {
     // effect nodes will connect here from other places
-    const useCompressor =
-      new URLSearchParams(window.location.search).get("uc") === "1"
-    this.$root.useCompressor = useCompressor
-    console.log("useCompressor", useCompressor)
-
     this.$root.preMaster = new Tone.Compressor(-30, 3).connect(Tone.Master)
 
     this.initMicrophone()
     this.initRecord()
 
-    console.log("isMobile", isMobile())
+    const urlParams = new URLSearchParams(window.location.search)
+    this.$root.debug = urlParams.get("debug") === "1"
+    if (this.$root.debug) {
+      console.debug("DEBUG mode on")
+      window.samples = this.samples
+    }
   },
 
   mounted() {
+    // start with a sample already loaded
     this.samples.push(this.presets[1])
+    this.$root.lastSampleInteractionIdx = 0
 
-    // quick entry of presets with keyboard (1, 2, 3, 4)
+    setTimeout(() => {
+      window.sample = this.$refs.samples[0]
+    }, 1000)
+
+    // quick entry of presets with keyboard
     document.addEventListener("keydown", (event) => {
-      if (
-        event.key == 0 ||
-        event.key == 1 ||
-        event.key == 2 ||
-        event.key == 3 ||
-        event.key == 4 ||
-        event.key == 5 ||
-        event.key == 6 ||
-        event.key == 7 ||
-        event.key == 8 ||
-        event.key == 9
-      ) {
-        if (this.samples.length >= 10) return
+      if (event.key >= "0" && event.key <= "9" && this.samples.length < 6) {
         this.samples.push(this.presets[event.key])
       }
     })
 
-    window.Tone = Tone
+    this.setupPaper()
+    this.resizeCanvas()
+    window.addEventListener("resize", this.resizeCanvas)
+  },
+
+  beforeDestroy() {
+    window.removeEventListener("resize", this.resizeCanvas)
   },
 
   methods: {
-    addSound() {
-      console.log("adding sound...")
+    addSample() {
       this.$refs.fileChooser.click()
     },
 
-    handleAddSound(event) {
+    handleSampleFileUpload(event) {
       const file = event.target.files[0]
-      console.log("Selected file:", file)
+      console.debug("Selected file:", file)
       this.initSample(file)
+    },
+
+    removeSample() {
+      const sample = this.$refs.samples[this.$root.lastSampleInteractionIdx]
+      console.debug("sample to be destroyed", sample.name)
+      window.sample = sample
+      sample.$destroy()
+      // this.destroyed(sample.name)
+    },
+
+    destroyed(name) {
+      // find the sample by name and remove it
+      console.info("trying to destroy", name)
+      const sample = this.samples.find((sample) => sample.name === name)
+      if (sample) {
+        this.samples.splice(this.samples.indexOf(sample), 1)
+      }
     },
 
     toggleSimpleRecord() {
@@ -228,7 +253,7 @@ export default {
     },
 
     async initRecord() {
-      console.log("recording...")
+      console.debug("recording...")
 
       this.mediaRecorder = null
       this.audioBlobs = []
@@ -240,11 +265,11 @@ export default {
 
     async record() {
       if (!this.recording) {
-        console.log("recording...")
+        console.debug("recording...")
         this.startRecording()
         this.recording = true
       } else {
-        console.log("finished recording")
+        console.debug("finished recording")
         const audioBlob = await this.stopRecording()
         if (audioBlob) {
           const audio = new Audio()
@@ -292,7 +317,7 @@ export default {
         }
 
         this.mediaRecorder.addEventListener("stop", () => {
-          console.log("stopped")
+          console.debug("stopped")
           const mimeType = this.mediaRecorder.mimeType
           const audioBlob = new Blob(this.audioBlobs, { type: mimeType })
 
@@ -362,14 +387,6 @@ export default {
       })
     },
 
-    destroyed(name) {
-      // find the sample by name and remove it
-      const sample = this.samples.find((sample) => sample.name === name)
-      if (sample) {
-        this.samples.splice(this.samples.indexOf(sample), 1)
-      }
-    },
-
     downloadFile(blob, filename) {
       const a = document.createElement("a")
       const url = URL.createObjectURL(blob)
@@ -393,7 +410,7 @@ export default {
       const entries = await zipReader.getEntries()
       for (let i = 0; i < entries.length; i++) {
         const entry = entries[i]
-        console.log("entry", entry)
+        console.debug("entry", entry)
         const blobWriter = new BlobWriter()
         if (entry.filename === "config.json") {
           const configJson = await entry.getData(configWriter)
@@ -402,20 +419,14 @@ export default {
           const d2 = config.effects.delay
           // const merged = merge(this.$refs.delay.$data, config.effects.delay)
           this.$refs.delay.$data.params.range = 100
-          // this.$refs.delay.$data = merged
-          // Vue.set(this.$refs.delay, "$data", merged)
-          window.d1 = d1
-          window.d2 = d2
-          // window.merged = merged
         } else {
           const blobMp3 = await entry.getData(blobWriter)
-          window.blob = blobMp3
           const blobUrl = URL.createObjectURL(blobMp3)
           this.samples.push({
             audio: blobUrl,
             name: "foo", // TODO: fix the name
           })
-          console.log(blobMp3)
+          console.debug(blobMp3)
         }
       }
       await zipReader.close()
@@ -423,6 +434,7 @@ export default {
 
     async saveSession() {
       const saveFilename = prompt("name to save?")
+      if (!saveFilename) return
       const zipFileWriter = new BlobWriter()
       const zipWriter = new ZipWriter(zipFileWriter)
 
@@ -471,11 +483,11 @@ export default {
     async toggleMicrophone() {
       // Tone.context.resume()
       if (!this.microphoning) {
-        console.log("microphoning...")
+        console.debug("microphoning...")
         this.microphoning = true
         this.recorder.start()
       } else {
-        console.log("finished microphoning")
+        console.debug("finished microphoning")
         this.microphoning = false
         const data = await this.recorder.stop()
         const blobUrl = URL.createObjectURL(data)
@@ -484,19 +496,17 @@ export default {
           audio: blobUrl,
           name: "my recording",
         })
-        // window.player = player
       }
     },
 
     handleDrop(event) {
-      console.log("handling drop")
+      console.debug("handling drop")
       const file = event.dataTransfer.files[0]
-      window.file = file
-      console.log(file)
+      console.debug(file)
       if (file && file.type.startsWith("audio/")) {
         this.initSample(file)
       } else if (file.name.endsWith(".digicanvas")) {
-        console.log("should load this one")
+        console.debug("should load this one")
         if (
           confirm(
             "Loading this configuration file will loose all current state session. Are you sure you want to proceed?"
@@ -514,16 +524,16 @@ export default {
       reader.onload = (evt) => {
         // option blob
         const blob = new Blob([reader.result], { type: file.type })
-        console.log("BLOB", blob)
+        console.debug("BLOB", blob)
         const blobUrl = URL.createObjectURL(blob)
 
         // check audio duration (by creating an Audio element and getting its metadata)
         const audio = new Audio()
         audio.src = blobUrl
         audio.addEventListener("loadedmetadata", () => {
-          console.log("Audio duration:", audio.duration)
+          console.debug("Audio duration:", audio.duration)
           if (audio.duration > 5) {
-            console.log(blobUrl)
+            console.debug(blobUrl)
             this.samples.push({
               audio: blobUrl,
               name: file.name.replace(/\.[^/.]+$/, ""),
@@ -533,11 +543,11 @@ export default {
             return
             // TODO: add some silence or crop
             // eslint-disable-next-line no-unreachable
-            console.log("going to add some silence")
+            console.debug("going to add some silence")
             const data = evt.target.result
             Tone.context.decodeAudioData(data, (buffer) => {
               const modifiedBuffer = this.addSilenceToEnd(buffer, 10)
-              console.log(
+              console.debug(
                 "Modified audio buffer:",
                 modifiedBuffer,
                 modifiedBuffer.duration
@@ -548,8 +558,8 @@ export default {
               })
               window.modifiedBuffer = modifiedBuffer
               const blobSilenceUrl = URL.createObjectURL(blobSilence)
-              console.log("BLOB", blobSilence)
-              console.log(blobSilenceUrl)
+              console.debug("BLOB", blobSilence)
+              console.debug(blobSilenceUrl)
               this.samples.push({
                 audio: blobSilenceUrl,
                 name: file.name.replace(/\.[^/.]+$/, ""),
@@ -566,7 +576,7 @@ export default {
     addSilenceToEnd(audioBuffer, targetDuration) {
       const currentDuration = audioBuffer.duration
       if (currentDuration >= targetDuration) {
-        console.log(
+        console.debug(
           "Audio is already equal to or longer than the target duration."
         )
         return audioBuffer
@@ -587,6 +597,25 @@ export default {
       }
       return newBuffer
     },
+
+    setupPaper() {
+      const canvas = this.$refs.paperCanvas
+      window.onload = () => {
+        paper.setup(canvas)
+        paper.install(canvas)
+        this.$root.paper = canvas.paper // save paperScope to be used other places
+      }
+    },
+
+    resizeCanvas() {
+      const app = this.$el
+      const canvas = this.$refs.paperCanvas
+      canvas.width = app.clientWidth
+      canvas.height = app.clientHeight
+      if (paper.view) {
+        paper.view.viewSize = new paper.Size(canvas.width, canvas.height)
+      }
+    },
   },
 }
 </script>
@@ -597,8 +626,6 @@ export default {
   --blue-light: rgb(170, 197, 216);
   --yellow: rgb(255, 220, 96);
   --border-radius: 10px;
-  --reverb-radius: 150px;
-  --buttons-height: 34px;
 }
 
 html,
@@ -625,13 +652,22 @@ body {
   text-align: center;
   color: #2c3e50;
   width: 100%;
-  min-height: 100vh;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
 }
 
-.no-select {
-  -webkit-user-select: none; /* Safari */
-  -ms-user-select: none; /* IE 10 and IE 11 */
-  user-select: none; /* Standard syntax */
+#paper-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  &.debug {
+    display: block;
+    z-index: 1;
+  }
 }
 
 .app-button {
@@ -643,6 +679,7 @@ body {
   align-items: center;
   justify-content: center;
   position: absolute;
+  z-index: 2;
   &:hover {
     cursor: pointer;
   }

@@ -29,7 +29,7 @@ export default {
           handler: (val) => {
             const { min, max } = this.params.delayTime
             const expVal = mapExp(val, min, max)
-            console.log("delay time is now", val, expVal)
+            console.debug("delay time is now", val, expVal)
             // this.delayNode.delayTime.rampTo(expVal, 0.01)
           },
         },
@@ -39,7 +39,7 @@ export default {
           step: 0.01,
           value: 0.5,
           handler: (val) => {
-            console.log("feedback is now", val)
+            console.debug("feedback is now", val)
             this.delayNode.feedback.rampTo(val, 0.01)
           },
         },
@@ -51,8 +51,8 @@ export default {
     this.delayNode = new Tone.FeedbackDelay(
       this.params.delayTime.value,
       this.params.feedback.value
-    ).toMaster()
-    console.log("created delay node")
+    ).toDestination()
+    console.debug("created delay node")
     if (!this.$root.effectNodes) this.$root.effectNodes = []
     this.$root.effectNodes["delay"] = this.delayNode
   },
