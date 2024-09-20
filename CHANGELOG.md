@@ -12,14 +12,19 @@ r can't (r)eproduce
   drive-by fix/improvement
 ```
 
-# v1.3 (2024-09-20) [Link](https://v1-2--digicanvas.netlify.app)
+# v1.4 (???) [Link](https://v1-4--digicanvas.netlify.app)
+- [ ] UI para tablets (fix double click)
+- [ ] export session
+- [ ] record session
+- [ ] drag de slider granular se release fora do slider faz dismiss à janela de background
+
+# v1.3 (2024-09-20) [Link](https://v1-3--digicanvas.netlify.app)
 - [✔️] effectSend = A(U(effect, sample)) / A(sample)
 - [✔️] effect max radius so that it covers 100% of biggest sample
 - [✔️] trash icon
-- [ ] slider exponencial rate granular
-- [~] record session
-- [ ] UI para tablets
-- [ ] drag de slider granular se release fora do slider faz dismiss à janela de background
+- [✔️] slider exponencial rate granular
+- [~] add min upload sample / min width logic
+- [!] UI para tablets (fix double click)
 - debug mode with `?debug=1`
 - improved cleanup of resources (audio buffers) when samples get removed
 

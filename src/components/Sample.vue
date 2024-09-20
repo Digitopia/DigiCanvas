@@ -116,6 +116,7 @@ import {
   lerpColor,
   mapExp,
   mapLog,
+  round,
   getCenter,
 } from "@/utils"
 
@@ -137,6 +138,13 @@ export default {
     idx: {
       type: Number,
       required: true,
+    },
+    // eslint-disable-next-line vue/require-default-prop
+    position: {
+      type: Object,
+      required: false,
+
+      // default: () => ({ x: null, y: null }),
     },
   },
 
@@ -257,6 +265,11 @@ export default {
     },
   },
 
+  created() {
+    window.sample = this
+    window.getCenter = getCenter
+  },
+
   mounted() {
     this.editName = this.name
 
@@ -282,6 +295,7 @@ export default {
     })
 
     window.grains = this.settings.granular.grains
+    window.mapLog = mapLog
   },
 
   beforeDestroy() {
@@ -363,36 +377,7 @@ export default {
 
         await this.resize()
         this.initDraggable()
-
-        // now that is init, we can show it and avoid flickering of positioning
-        gsap.to(this.$refs.sample, { opacity: 1, duration: 0.4 })
-
-        // middle positioning of new samples
-        let initX, initY
-        if (this.idx === 0) {
-          initX = window.innerWidth / 2 - this.width / 2
-          initY = window.innerHeight / 2 - this.height / 2 - 75
-        } else {
-          // random positioning of new samples
-          initX = randomInt(0, window.innerWidth - this.width * 1.2)
-          initY = randomInt(0, window.innerHeight - this.height * 1.2)
-        }
-
-        gsap.to(this.$refs.sample, {
-          x: initX,
-          y: initY,
-          ease: "power2.out",
-          duration: 0,
-        })
-
-        // set paper rect to be used for intersection with effects area
-        const { x, y } = getCenter(this.$refs.waveform)
-        this.paperRect = new this.$root.paper.Path.Rectangle({
-          position: { x, y },
-          size: [this.width, this.height],
-          fillColor: "lightblue",
-          strokeColor: "blue",
-        })
+        this.initPosition()
       })
 
       wavesurfer.on("finish", () => {
@@ -420,6 +405,45 @@ export default {
         //   this.audioBuffer.duration
         // )
       }
+    },
+
+    initPosition() {
+      let x, y
+      if (this.position) {
+        // use position if prop is provided
+        console.log("using provided position", this.position)
+        x = this.position.x
+        y = this.position.y
+      } else {
+        // otherwise first sample is centered
+        if (this.idx === 0) {
+          x = window.innerWidth / 2 - this.width / 2
+          y = window.innerHeight / 2 - this.height / 2 - 75
+        } else {
+          // and others are random
+          x = randomInt(0, window.innerWidth - this.width * 1.2)
+          y = randomInt(0, window.innerHeight - this.height * 1.2)
+        }
+      }
+
+      // now that is init, we can show it and avoid flickering of positioning
+      gsap.to(this.$refs.sample, {
+        x,
+        y,
+        ease: "power2.out",
+        duration: 0.4,
+        opacity: 1,
+        onComplete: () => {
+          // set paper rect to be used for intersection with effects area
+          const { x, y } = getCenter(this.$refs.waveform)
+          this.paperRect = new this.$root.paper.Path.Rectangle({
+            position: { x, y },
+            size: [this.width, this.height],
+            fillColor: "lightblue",
+            strokeColor: "blue",
+          })
+        },
+      })
     },
 
     // Called from within initWaveform, since needs width of the waveform container
@@ -509,9 +533,9 @@ export default {
           that.settings.granular.params.grainSize.max
         )
         console.debug(
-          "grainSize is now",
-          val.toFixed(2),
-          expGrainSize.toFixed(2)
+          "[grain-size]",
+          `val=${round(val).toString().padStart(2)}`,
+          `exp=${round(expGrainSize).toString().padStart(2)}`
         )
         that.settings.granular.params.grainSize.value = expGrainSize
       })
@@ -530,10 +554,10 @@ export default {
         )
         this.settings.granular.params.rate.value = logRate
         console.debug(
-          "rate is now",
-          val.toFixed(2),
-          logRate.toFixed(2),
-          this.getInvertedRate().toFixed(2)
+          "[rate]",
+          `val=${round(val)}`,
+          `log=${round(logRate)}`,
+          `inv=${round(this.getInvertedRate())}`
         )
       })
 
@@ -544,7 +568,7 @@ export default {
       })
       this.settings.granular.sliders.rate = randomSlider
       randomSlider.on("change", (val) => {
-        console.debug("random is now", val)
+        console.debug("[random]", `val=${round(val)}`)
         this.settings.granular.params.random.value = val
       })
 

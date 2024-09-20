@@ -53,12 +53,13 @@ export function mapExp(val, min, max) {
   return ret
 }
 
+// https://www.desmos.com/calculator/ciebmckvfa
 export function mapLog(val, min, max) {
-  if (val <= 0) return min // Handle zero and negative inputs
-  const minLog = Math.log(min)
-  const maxLog = Math.log(max)
-  const scale = (maxLog - minLog) / (max - min)
-  return Math.exp(minLog + scale * (val - min))
+  const norm = mapNumber(val, min, max, 0, 1)
+  const factor = 50 // controls how fast the curve accelerates
+  const exp = Math.max(Math.log(norm) / Math.log(factor) + 1, 0)
+  const ret = +mapNumber(exp, 0, 1, min, max).toFixed(2)
+  return ret
 }
 
 /* eslint-disable */
@@ -179,4 +180,8 @@ export function getCenter(div) {
   const x = rect.left + rect.width / 2
   const y = rect.top + rect.height / 2
   return { x, y }
+}
+
+export function round(num, decimals = 2) {
+  return +num.toFixed(decimals)
 }

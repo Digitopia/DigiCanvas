@@ -101,19 +101,12 @@ export default {
     this.params.range = {
       // NOTE: this is actual width, not radius! (because svg files require to be in 200px width)
       min: 200,
-      // max: 500,
-      // max: SAMPLE_MAX_WIDTH,
       max: maxRangeWith,
       step: 1,
       value: 200,
       handler: (val) => {
         console.debug("handler in EFFECT of range is now", val)
-        // this.rangeRadius = val
-        // changing width/height
-        // this.$refs.area.style.width = `${val * 2}px`
-        // this.$refs.area.style.height = `${val * 2}px`
         const { min, max } = this.params.range
-        // const scale = mapNumber(val, min, max, 1, max / min).toFixed(2)
         const scale = mapNumber(val, min, max, 1, max / min)
         console.debug(`range is now ${val}px scale(${scale})`)
 
@@ -135,10 +128,7 @@ export default {
 
     setTimeout(() => {
       const { x, y } = getCenter(this.$refs.effectArea)
-      // const radius = this.$refs.effectArea.getBoundingClientRect().width / 2
-      // const radius = this.params.range.value
       const radius = this.$refs.effectArea.clientWidth / 2
-      // this.paperCircle = new this.$root.paper.Path.Circle({
       this.paperCircle = new this.$root.paper.Shape.Circle({
         center: [x, y],
         radius,
@@ -165,11 +155,6 @@ export default {
           this.$refs.effectArea.style.zIndex = highest + 1
         },
         onDrag: () => {
-          // this.$root.$emit("effectDrag", {
-          //   name: this.name,
-          //   el: this.$el,
-          //   radius: this.rangeRadius,
-          // })
           this.$root.$emit("effectDragUseArea", this)
           this.updatePaperCircle()
         },

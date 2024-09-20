@@ -47,11 +47,11 @@ export default {
     }
   },
 
-  mounted() {
-    if (this.$root.debug) {
-      window.reverb = this
-    }
+  created() {
+    window.reverb = this
+  },
 
+  mounted() {
     // Freeverb
     // Freeverb doesn't dampening breaking when changing freq in tone@15, so using simple Reverb instead
     // this.reverbNode = new Tone.Freeverb(

@@ -51,6 +51,7 @@
       :key="idx"
       :name="sample.name"
       :audio="sample.audio"
+      :position="sample.position"
       :idx="idx"
       :audio-buffer="sample.buffer"
       @mouseover.native="$root.lastSampleInteractionIdx = idx"
@@ -210,6 +211,9 @@ export default {
     },
 
     removeSample() {
+      if (this.samples.length == 0) return
+      console.log(this.samples.length)
+      window.samples = this.samples
       const sample = this.$refs.samples[this.$root.lastSampleInteractionIdx]
       console.debug("sample to be destroyed", sample.name)
       window.sample = sample
@@ -408,27 +412,41 @@ export default {
       const zipReader = new ZipReader(zipFileReader)
 
       const entries = await zipReader.getEntries()
-      for (let i = 0; i < entries.length; i++) {
-        const entry = entries[i]
+
+      // first read config
+      const configEntry = entries.find(
+        (entry) => entry.filename === "config.json"
+      )
+      const configJson = await configEntry.getData(configWriter)
+      const config = JSON.parse(configJson)
+
+      // TODO: load effects settings
+      // const d1 = this.$refs.delay.$data
+      // const d2 = config.effects.delay
+      // const merged = merge(this.$refs.delay.$data, config.effects.delay)
+      // this.$refs.delay.$data.params.range = 350
+
+      // load samples
+      const sampleEntries = entries.filter((entry) => entry != configEntry)
+      sampleEntries.forEach(async (entry) => {
         console.debug("entry", entry)
+        const sampleName = entry.filename.split(".mp3")[0]
+        const sampleConfig = config.samples.find(
+          (sample) => sample.name === sampleName
+        )
         const blobWriter = new BlobWriter()
-        if (entry.filename === "config.json") {
-          const configJson = await entry.getData(configWriter)
-          const config = JSON.parse(configJson)
-          const d1 = this.$refs.delay.$data
-          const d2 = config.effects.delay
-          // const merged = merge(this.$refs.delay.$data, config.effects.delay)
-          this.$refs.delay.$data.params.range = 100
-        } else {
-          const blobMp3 = await entry.getData(blobWriter)
-          const blobUrl = URL.createObjectURL(blobMp3)
-          this.samples.push({
-            audio: blobUrl,
-            name: "foo", // TODO: fix the name
-          })
-          console.debug(blobMp3)
-        }
-      }
+        const blobMp3 = await entry.getData(blobWriter)
+        const blobUrl = URL.createObjectURL(blobMp3)
+        this.samples.push({
+          audio: blobUrl,
+          name: sampleName,
+          position: {
+            x: sampleConfig.x,
+            y: sampleConfig.y,
+          },
+        })
+        console.debug(blobMp3)
+      })
       await zipReader.close()
     },
 
