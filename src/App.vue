@@ -13,8 +13,19 @@
       class="app-button scale-hover"
       src="icons/add.svg"
       style="right: 20px"
-      @click="addSample"
+      @click="adding = !adding"
     />
+    <div v-show="adding" style="position: absolute; bottom: 70px; right: 20px">
+      <div
+        v-for="presetKey in Object.keys(presets)"
+        :key="presetKey"
+        class="add-sample-button scale-hover"
+        @click="addPreset(presetKey)"
+      >
+        {{ presetKey }}
+      </div>
+      <div class="add-sample-button scale-hover" @click="addSample">📁</div>
+    </div>
     <img
       id="add-button"
       class="app-button scale-hover"
@@ -78,6 +89,8 @@
 </template>
 
 <script>
+import Toastify from "toastify-js"
+import "toastify-js/src/toastify.css"
 import Delay from "@/components/Delay"
 import Reverb from "@/components/Reverb"
 import Sample from "@/components/Sample"
@@ -98,10 +111,10 @@ import paper from "paper"
 import * as Tone from "tone"
 
 const presets = {
-  0: {
-    audio: "presets/guit_plus_background.mp3",
-    name: "guit + bg",
-  },
+  // 0: {
+  //   audio: "presets/guit_plus_background.mp3",
+  //   name: "guit + bg",
+  // },
   1: {
     audio: "presets/birds1_mono.mp3",
     name: "birds",
@@ -140,6 +153,8 @@ const presets = {
   },
 }
 
+const SAMPLES_MAX = 6
+
 export default {
   name: "App",
 
@@ -155,6 +170,7 @@ export default {
       presets,
       recording: false,
       microphoning: false,
+      adding: false,
     }
   },
 
@@ -187,11 +203,8 @@ export default {
 
     // quick entry of presets with keyboard
     document.addEventListener("keydown", (event) => {
-      if (event.key >= "0" && event.key <= "9" && this.samples.length < 6) {
-        this.samples.push({
-          ...this.presets[event.key],
-          idx: this.samples.length,
-        })
+      if (event.key >= "0" && event.key <= "9") {
+        this.addPreset(Number(event.key))
       }
     })
 
@@ -207,6 +220,28 @@ export default {
   methods: {
     addSample() {
       this.$refs.fileChooser.click()
+    },
+
+    addPreset(presetKey) {
+      this.adding = false
+      if (this.samples.length >= SAMPLES_MAX) {
+        Toastify({
+          text: "Maximum number of samples in canvas reached",
+          duration: 3000,
+          // newWindow: false,
+          gravity: "top",
+          position: "center",
+          stopOnFocus: true, // Prevents dismissing of toast on hover
+          style: {
+            background: "linear-gradient(to right, #00b09b, #96c93d)",
+          },
+        }).showToast()
+        return
+      }
+      this.samples.push({
+        ...this.presets[presetKey],
+        idx: this.samples.length,
+      })
     },
 
     handleSampleFileUpload(event) {
@@ -708,6 +743,22 @@ body {
     &:hover {
       cursor: not-allowed !important;
     }
+  }
+}
+
+.add-sample-button {
+  width: 45px;
+  height: 45px;
+  border: 3px solid black;
+  border-radius: 50%;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  justify-content: center;
+  font-weight: bold;
+  &:hover {
+    cursor: pointer;
   }
 }
 

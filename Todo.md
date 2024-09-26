@@ -1,5 +1,10 @@
 # BACKLOG
 
+- [ ] UI para tablets (fix double click)
+- [ ] export session
+- [ ] record session
+- [ ] drag de slider granular se release fora do slider faz dismiss à janela de background
+
 *BUGS*
 - [ ] drag de slider granular se release fora do slider faz dismiss à janela de background
 *NEEDS CLARIFICATION/DISCUSSION*

@@ -12,18 +12,12 @@ r can't (r)eproduce
   drive-by fix/improvement
 ```
 
-# v1.4 (2024-09-27 [Link](https://v1-4--digicanvas.netlify.app)
-- [✔️] mudar equacao de mapeamento logaritmico do param rate do granular
-- [✔️] fix removing sample just working for first one
-- [✔️] reverb param with 180deg
-- [✔️] suporte para HP e LP: HP (min: 0, max: 5000); LP (min: 200, max: 20000)
-- [ ] ui acrescentar samples em ipad com circulos verticiais a sair do +
-- [ ] UI para tablets (fix double click)
-
-- [ ] export session
-- [ ] record session
-
-- [ ] drag de slider granular se release fora do slider faz dismiss à janela de background
+# v1.4 (2024-09-27) [Link](https://v1-4--digicanvas.netlify.app)
+- [✔️] interface para acrescentar presets
+- [✔️] reverb param com arco 180º
+- [✔️] suporte para filtro HP e LP (de momento só disponível em controlos granular)
+- [✔️] fix botão remover sample (só estava a funcionar para o primeiro)
+- [✔️] tweak mapeamento logarítmico do param rate do granular
 
 # v1.3 (2024-09-20) [Link](https://v1-3--digicanvas.netlify.app)
 - [✔️] effectSend = A(U(effect, sample)) / A(sample)
