@@ -15,7 +15,7 @@ r can't (r)eproduce
 # v1.4 (2024-09-27 [Link](https://v1-4--digicanvas.netlify.app)
 - [✔️] mudar equacao de mapeamento logaritmico do param rate do granular
 - [✔️] fix removing sample just working for first one
-- [ ] reverb param with 180deg
+- [✔️] reverb param with 180deg
 - [ ] UI para tablets (fix double click)
 - [ ] suporte para HP e LP : HP (min: 0, max: 5000); LP (min: 200, max: 20000)
 - [ ] ui acrescentar samples em ipad com circulos verticiais a sair do +

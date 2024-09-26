@@ -13,12 +13,8 @@
         :id="paramName"
         :key="paramName"
         v-model="param.value"
-        :start-angle="
-          idx * sliderArcAngle +
-          idx * sliderArcAngleStep -
-          sliderArcAngleAngleOffset
-        "
-        :end-angle="`+${sliderArcAngle}`"
+        :start-angle="getStartAngle(param, idx)"
+        :end-angle="getEndAngle(param)"
         line-cap="round"
         width="8"
         path-color="rgba(255,255,255,0.4)"
@@ -159,6 +155,18 @@ export default {
           this.updatePaperCircle()
         },
       })
+    },
+
+    getStartAngle(param, idx) {
+      return param.startAngle
+        ? param.startAngle
+        : idx * this.sliderArcAngle +
+            idx * this.sliderArcAngleStep -
+            this.sliderArcAngleAngleOffset
+    },
+
+    getEndAngle(param) {
+      return param.endAngle ? param.endAngle : `+${this.sliderArcAngle}`
     },
 
     updatePaperCircle() {

@@ -21,17 +21,24 @@ export default {
     return {
       reverbNode: null,
       params: {
-        dampening: {
-          min: 0.1,
-          max: 0.1,
-          step: 100,
-          value: 0.1,
-          handler: (val) => {
-            console.debug("dampening is now", val)
-            // this.reverbNode.dampening.rampTo(val, 0.01)
-            this.reverbNode.dampening = val
-          },
-        },
+        // Freeverb doesn't have dampening
+        // dampening: {
+        //   min: 0.1,
+        //   max: 0.1,
+        //   step: 100,
+        //   value: 0.1,
+        //   handler: (val) => {
+        //     console.debug("dampening is now", val)
+        //     // this.reverbNode.dampening.rampTo(val, 0.01)
+        //     this.reverbNode.dampening = val
+        //   },
+        //   startAngle: (idx) => {
+        //     return idx * 90
+        //   },
+        //   endAngle: (idx) => {
+        //     return idx * 90
+        //   },
+        // },
         decay: {
           min: 0.15,
           max: 1.5,
@@ -42,13 +49,15 @@ export default {
             // this.reverbNode.roomSize.rampTo(val, 0.01)
             this.reverbNode.decay = val
           },
+          // shorter version
+          // startAngle: 45,
+          // endAngle: "+90",
+          // longer version
+          startAngle: -15,
+          endAngle: 195,
         },
       },
     }
-  },
-
-  created() {
-    window.reverb = this
   },
 
   mounted() {
@@ -58,6 +67,10 @@ export default {
     //   this.params.decay.value,
     //   this.params.dampening.value
     // )
+
+    // force range to be at the bottom (despite idx being 2)
+    this.params.range.startAngle = 225
+    this.params.range.endAngle = "+90"
 
     // Reverb (Simple)
     this.reverbNode = new Tone.Reverb(this.params.decay.value)
