@@ -46,16 +46,15 @@
       @click="toggleMicrophone"
     />
     <Sample
-      v-for="(sample, idx) in samples"
+      v-for="sample in samples"
       ref="samples"
-      :key="idx"
+      :key="sample.idx"
       :name="sample.name"
       :audio="sample.audio"
       :position="sample.position"
-      :idx="idx"
+      :idx="sample.idx"
       :audio-buffer="sample.buffer"
-      @mouseover.native="$root.lastSampleInteractionIdx = idx"
-      @destroyed="destroyed"
+      @mouseover.native="$root.lastSampleInteractionIdx = sample.idx"
     />
     <Reverb ref="reverb" style="bottom: 50px; left: 30px" />
     <Delay ref="delay" style="bottom: 50px; left: 280px" />
@@ -176,7 +175,10 @@ export default {
 
   mounted() {
     // start with a sample already loaded
-    this.samples.push(this.presets[1])
+    this.samples.push({
+      ...this.presets[1],
+      idx: 0,
+    })
     this.$root.lastSampleInteractionIdx = 0
 
     setTimeout(() => {
@@ -186,7 +188,10 @@ export default {
     // quick entry of presets with keyboard
     document.addEventListener("keydown", (event) => {
       if (event.key >= "0" && event.key <= "9" && this.samples.length < 6) {
-        this.samples.push(this.presets[event.key])
+        this.samples.push({
+          ...this.presets[event.key],
+          idx: this.samples.length,
+        })
       }
     })
 
@@ -212,22 +217,19 @@ export default {
 
     removeSample() {
       if (this.samples.length == 0) return
-      console.log(this.samples.length)
-      window.samples = this.samples
-      const sample = this.$refs.samples[this.$root.lastSampleInteractionIdx]
-      console.debug("sample to be destroyed", sample.name)
-      window.sample = sample
-      sample.$destroy()
-      // this.destroyed(sample.name)
-    },
 
-    destroyed(name) {
-      // find the sample by name and remove it
-      console.info("trying to destroy", name)
-      const sample = this.samples.find((sample) => sample.name === name)
-      if (sample) {
-        this.samples.splice(this.samples.indexOf(sample), 1)
-      }
+      const refSample = this.$refs.samples.find(
+        (sample) => sample.idx == this.$root.lastSampleInteractionIdx
+      )
+      refSample.$destroy()
+
+      this.samples = this.samples.filter(
+        (sample) => sample.idx != this.$root.lastSampleInteractionIdx
+      )
+
+      // after deleting, consider last interacted sample to be the first one
+      this.$root.lastSampleInteractionIdx =
+        this.samples.length > 0 ? this.samples[0].idx : null
     },
 
     toggleSimpleRecord() {

@@ -299,8 +299,7 @@ export default {
   },
 
   beforeDestroy() {
-    console.info("beforeDestroy", this.name)
-    this.$emit("destroyed", this.name)
+    console.info("beforeDestroy", this.name, this.idx)
     this.resizeObserver.unobserve(this.$refs.sample)
     this.$root.$off("toggleControls", this.toggleControls)
     this.$root.$off("effectDragUseArea", this.effectDragUseArea)
