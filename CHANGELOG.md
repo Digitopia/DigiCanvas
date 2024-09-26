@@ -12,10 +12,17 @@ r can't (r)eproduce
   drive-by fix/improvement
 ```
 
-# v1.4 (???) [Link](https://v1-4--digicanvas.netlify.app)
+# v1.4 (2024-09-27 [Link](https://v1-4--digicanvas.netlify.app)
+- [✔️] mudar equacao de mapeamento logaritmico do param rate do granular
+- [ ] reverb param with 180deg
 - [ ] UI para tablets (fix double click)
+- [ ] removeSample just working for first one
+- [ ] suporte para HP e LP : HP (min: 0, max: 5000); LP (min: 200, max: 20000)
+- [ ] ui acrescentar samples em ipad com circulos verticiais a sair do +
+
 - [ ] export session
 - [ ] record session
+
 - [ ] drag de slider granular se release fora do slider faz dismiss à janela de background
 
 # v1.3 (2024-09-20) [Link](https://v1-3--digicanvas.netlify.app)

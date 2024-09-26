@@ -53,11 +53,10 @@ export function mapExp(val, min, max) {
   return ret
 }
 
-// https://www.desmos.com/calculator/ciebmckvfa
+// Play with the curves here: https://www.desmos.com/calculator/nlvhctownn
 export function mapLog(val, min, max) {
   const norm = mapNumber(val, min, max, 0, 1)
-  const factor = 50 // controls how fast the curve accelerates
-  const exp = Math.max(Math.log(norm) / Math.log(factor) + 1, 0)
+  const exp = Math.max(Math.log10(norm + 0.1) + 0.96, 0)
   const ret = +mapNumber(exp, 0, 1, min, max).toFixed(2)
   return ret
 }
