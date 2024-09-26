@@ -29,6 +29,7 @@
         </div>
         <!-- GRANULAR mode controls -->
         <div v-show="mode === 'granular'" class="granular-sliders spaced-out">
+          <div :id="`filtering-${idx}`" @click.stop>Fs</div>
           <div :id="`grainSize-${idx}`" @click.stop>Gs</div>
           <div :id="`rate-${idx}`" @click.stop>Rt</div>
           <div :id="`random-${idx}`" @click.stop>Rd</div>
@@ -211,6 +212,27 @@ export default {
             },
           },
         },
+        filtering: {
+          active: null,
+          slider: {
+            min: 0,
+            max: 1,
+            value: 0.2,
+            step: 0.01,
+          },
+          highpass: {
+            min: 0,
+            max: 5000,
+            value: 2000,
+            audioNode: null,
+          },
+          lowpass: {
+            min: 200,
+            max: 20000,
+            value: 1,
+            audioNode: null,
+          },
+        },
       },
       region: null, // regions are used in both granular and delimiters for the play and loop
       isPlaying: false,
@@ -311,6 +333,8 @@ export default {
       this.audioGainNode,
       this.effectSends.reverb,
       this.effectSends.delay,
+      this.settings.filtering.lowpass.audioNode,
+      this.settings.filtering.highpass.audioNode,
       // this.audioElementSource,
     ]
     nodes.forEach((node) => {
@@ -507,8 +531,14 @@ export default {
         this.audioGainNode.connect(this.effectSends[effect])
       })
 
-      // and create audio gain to preMaster
-      this.audioGainNode.connect(this.$root.preMaster)
+      // init frequency filters
+      const filterTypes = ["highpass", "lowpass"]
+      filterTypes.forEach((filterType) => {
+        const filterSettings = this.settings.filtering[filterType]
+        const filterNode = new Tone.Filter(filterSettings.value, filterType)
+        filterNode.connect(this.$root.preMaster)
+        filterSettings.audioNode = filterNode
+      })
     },
 
     initGranularSliders() {
@@ -571,13 +601,77 @@ export default {
         this.settings.granular.params.random.value = val
       })
 
+      // filtering
+      const filteringSlider = new Nexus.Slider(`#filtering-${this.idx}`, {
+        ...opts,
+        ...this.settings.filtering.slider,
+      })
+      filteringSlider.on("change", (val) => {
+        let filterFrequency
+        let filterType
+        if (val >= 0.5) {
+          filterType = "highpass"
+          filterFrequency = mapNumber(
+            val,
+            0.5,
+            1,
+            this.settings.filtering.highpass.min,
+            this.settings.filtering.highpass.max
+          )
+          this.settings.filtering.highpass.value = filterFrequency
+          this.settings.filtering.highpass.audioNode.frequency.rampTo(
+            filterFrequency,
+            0.1
+          )
+        } else {
+          filterType = "lowpass"
+          filterFrequency = mapNumber(
+            val,
+            0,
+            0.5,
+            this.settings.filtering.lowpass.min,
+            this.settings.filtering.lowpass.max
+          )
+          this.settings.filtering.lowpass.value = filterFrequency
+          this.settings.filtering.lowpass.audioNode.frequency.rampTo(
+            filterFrequency,
+            0.1
+          )
+        }
+
+        console.debug(
+          "[filtering]",
+          `val=${round(val)}`,
+          `type=${filterType}`,
+          `freq=${round(filterFrequency)}`
+        )
+
+        // toggle which filter to use after the gainNode
+        if (this.settings.filtering.active !== filterType) {
+          this.audioGainNode.disconnect() // disconnect all outgoing connections
+          this.audioGainNode.connect(
+            this.settings.filtering[filterType].audioNode
+          )
+          this.settings.filtering.active = filterType
+        }
+
+        this.settings.filtering.value = val
+      })
+      // trigger on change of the slider on init
+      // eslint-disable-next-line no-self-assign
+      filteringSlider.value = filteringSlider.value
+
       // colors
-      grainSizeSlider.colorize("accent", "var(--blue)")
-      grainSizeSlider.colorize("fill", "var(--blue-light)")
-      rateSlider.colorize("accent", "var(--blue)")
-      rateSlider.colorize("fill", "var(--blue-light)")
-      randomSlider.colorize("accent", "var(--blue)")
-      randomSlider.colorize("fill", "var(--blue-light)")
+      const sliders = [
+        grainSizeSlider,
+        rateSlider,
+        randomSlider,
+        filteringSlider,
+      ]
+      sliders.forEach((slider) => {
+        slider.colorize("accent", "var(--blue)")
+        slider.colorize("fill", "var(--blue-light)")
+      })
     },
 
     updateAmplitude(val) {

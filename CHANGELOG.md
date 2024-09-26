@@ -16,9 +16,9 @@ r can't (r)eproduce
 - [✔️] mudar equacao de mapeamento logaritmico do param rate do granular
 - [✔️] fix removing sample just working for first one
 - [✔️] reverb param with 180deg
-- [ ] UI para tablets (fix double click)
-- [ ] suporte para HP e LP : HP (min: 0, max: 5000); LP (min: 200, max: 20000)
+- [✔️] suporte para HP e LP: HP (min: 0, max: 5000); LP (min: 200, max: 20000)
 - [ ] ui acrescentar samples em ipad com circulos verticiais a sair do +
+- [ ] UI para tablets (fix double click)
 
 - [ ] export session
 - [ ] record session
