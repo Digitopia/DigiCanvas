@@ -516,6 +516,10 @@ export default {
           this.stop() // to avoid UI jump at play
         }, 200) // TODO: requiring timeout
       })
+      // Add error handling
+      this.audioNode.onerror = (err) => {
+        console.error("Error loading audio", err)
+      }
       this.audioNode.volume.value = -6
 
       // gain node to control via amplitude slider

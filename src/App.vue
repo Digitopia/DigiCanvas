@@ -19,7 +19,7 @@
       <div
         v-for="presetKey in Object.keys(presets)"
         :key="presetKey"
-        class="add-sample-button scale-hover"
+        class="add-sample-button scale-hover no-drag"
         @click="addPreset(presetKey)"
       >
         {{ presetKey }}
@@ -268,6 +268,7 @@ export default {
     },
 
     toggleSimpleRecord() {
+      if (this.microphoning) return
       if (!this.recording) {
         this.startSimpleRecord()
         this.recording = true
@@ -488,6 +489,7 @@ export default {
     },
 
     async saveSession() {
+      if (this.microphoning || this.recording) return
       const saveFilename = prompt("name to save?")
       if (!saveFilename) return
       const zipFileWriter = new BlobWriter()
@@ -537,6 +539,7 @@ export default {
 
     async toggleMicrophone() {
       // Tone.context.resume()
+      if (this.recording) return
       if (!this.microphoning) {
         console.debug("microphoning...")
         this.microphoning = true
@@ -546,10 +549,12 @@ export default {
         this.microphoning = false
         const data = await this.recorder.stop()
         const blobUrl = URL.createObjectURL(data)
+        console.log("blobURL", blobUrl)
         // const player = new Tone.Player(blobUrl, () => {}).toDestination()
         this.samples.push({
           audio: blobUrl,
           name: "my recording",
+          idx: this.samples.length,
         })
       }
     },
@@ -707,7 +712,7 @@ body {
   text-align: center;
   color: #2c3e50;
   width: 100%;
-  height: 100vh;
+  height: 100dvh;
   position: relative;
   overflow: hidden;
 }
@@ -762,6 +767,15 @@ body {
   }
 }
 
+*,
+.no-drag {
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+
 #info-button {
   top: 10px;
   right: 10px;
@@ -772,4 +786,8 @@ body {
 .recording {
   background: red;
 }
+
+// * {
+//   touch-action: manipulation;
+// }
 </style>

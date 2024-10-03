@@ -6,6 +6,7 @@
       class="effect-center"
       :style="{ backgroundImage: `url('${icon}')` }"
       @dblclick.stop="showSliders = !showSliders"
+      @touchstart.stop="touchStart"
     ></div>
     <div v-show="showSliders" class="sliders">
       <round-slider
@@ -26,7 +27,7 @@
         :min="param.min"
         :max="param.max"
         :step="param.step"
-        handle-size="+2"
+        handle-size="+8"
         style="position: absolute"
         :update="handleParamChange"
       />
@@ -73,6 +74,7 @@ export default {
       sliderArcAngle: 90,
       rangeRadius: null, // need a specific var so that <round-slider> auto changes
       paperCircle: null,
+      touched: false, // var to detect double tap
     }
   },
 
@@ -136,6 +138,16 @@ export default {
   },
 
   methods: {
+    touchStart() {
+      if (this.touched) {
+        this.showSliders = !this.showSliders
+      }
+      setTimeout(() => {
+        this.touched = false
+      }, 300)
+      this.touched = true
+    },
+
     initDraggable() {
       Draggable.create(this.$refs.effect, {
         trigger: this.$refs.effectCenter,
