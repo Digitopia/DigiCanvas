@@ -6,7 +6,7 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "deploy:prod": "npm run build && cp -r dist docs && echo 'commit it now'",
+    "deploy:prod": "npm run build && cp -r dist/* docs && echo 'commit it now'",
     "deploy:uat": "npm run build && netlify deploy --dir=dist --alias=$VERSION"
   },
   "dependencies": {
