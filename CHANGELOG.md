@@ -11,6 +11,8 @@ x done
 r can't (r)eproduce
   drive-by fix/improvement
 ```
+# v1.4 (2024-09-27) [Link](https://v1-5--digicanvas.netlify.app)
+...
 
 # v1.4 (2024-09-27) [Link](https://v1-4--digicanvas.netlify.app)
 - [✔️] interface para acrescentar presets
